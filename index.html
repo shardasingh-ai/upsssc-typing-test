@@ -232,8 +232,62 @@
 
     /* ===== Load passages from passages.json ===== */
     async function loadPassages(){
-      // Read passages from a pre-loaded JS data file (no fetch for speed)
-      var data = window.PASSAGES || {};
+      // Watchdog: if something blocks initialization, force-enable defaults after 2s
+      var watchdog = setTimeout(function(){
+        try{
+          if (!passageSets || !passageSets.length){
+            console.warn('[TypingTest] passages.js missing or late — using built-in default.');
+            passageSets = [{ id:'default', label:'Default (Built-in)',
+              english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
+              hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।",
+              difficulty:'medium' }];
+            els.passageSet.innerHTML = '<option value="default">Default (Built-in)</option>';
+            els.passageSet.value = 'default';
+            applySet('default');
+            els.startBtn.disabled = false; els.startBtn.textContent = 'Start English';
+            showToast('Using built-in passages. Check passages.js.');
+          }
+        }catch(err){ console.error(err); }
+      }, 2000);
+
+      try{
+        // Read passages from a pre-loaded JS data file (no fetch for speed)
+        var data = window.PASSAGES || {};
+        var sets = [];
+        if (Array.isArray(data.sets)){
+          sets = data.sets.filter(function(s){ return s && s.english && s.hindi; });
+        } else if (data.english && data.hindi){
+          sets = [{ id: data.id || 'default', label: data.label || 'Default', english: data.english, hindi: data.hindi, difficulty: data.difficulty || 'medium' }];
+        }
+
+        if (!sets.length){
+          console.warn('[TypingTest] window.PASSAGES missing/invalid — falling back to built-in.');
+          sets = [{ id:'default', label:'Default (Built-in)',
+            english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
+            hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।",
+            difficulty:'medium' }];
+        }
+
+        passageSets = sets.map(function(s,idx){ return Object.assign({ id: s.id || ('set-'+idx), label: s.label || ('Set '+(idx+1)) }, s); });
+        els.passageSet.innerHTML = passageSets.map(function(s){ return '<option value="'+s.id+'">'+s.label+'</option>'; }).join('');
+        els.passageSet.value = passageSets[0].id;
+        applySet(passageSets[0].id);
+
+        els.startBtn.disabled = false;
+        els.startBtn.textContent = 'Start English';
+      }catch(err){
+        console.error('[TypingTest] loadPassages error', err);
+        showToast('Unable to load passages — using built-in.');
+        passageSets = [{ id:'default', label:'Default (Built-in)', english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
+          hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।" }];
+        els.passageSet.innerHTML = '<option value="default">Default (Built-in)</option>';
+        els.passageSet.value = 'default';
+        applySet('default');
+        els.startBtn.disabled = false; els.startBtn.textContent = 'Start English';
+      } finally {
+        clearTimeout(watchdog);
+      }
+    };
       var sets = [];
       if (Array.isArray(data.sets)){
         sets = data.sets.filter(function(s){ return s && s.english && s.hindi; });
