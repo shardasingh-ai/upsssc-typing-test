@@ -57,10 +57,6 @@
   .note{color:var(--muted)}
   .hidden{display:none}
 
-  .rows{display:grid; gap:12px}
-  .row{display:grid; grid-template-columns:140px 1fr; gap:12px; align-items:center}
-  .kbd{background:#111827; color:#fff; padding:2px 8px; border-radius:6px; font-size:12px}
-
   /* Toast under header (centered) */
   #toastWrap{ display:none; margin-top:12px; }
   #toast{
@@ -72,8 +68,25 @@
   #toastWrap.show{ display:block; }
   #toastWrap.show #toast{ opacity:1; }
 
+  /* Modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(2,6,23,.55);
+    display:none; align-items:center; justify-content:center; padding:16px; z-index:50;
+  }
+  .modal{
+    background:#fff; color:#0f172a; width:min(880px, 100%);
+    border-radius:16px; box-shadow:var(--ring); max-height:80vh; display:flex; flex-direction:column;
+  }
+  .modal header{ padding:16px 18px; border-bottom:1px solid #e5e7eb; font-weight:800; font-size:16px }
+  .modal .modal-body{ padding:16px 18px; overflow:auto; }
+  .modal footer{ padding:14px 18px; border-top:1px solid #e5e7eb; display:flex; gap:10px; justify-content:flex-end }
+  .btn-secondary{ background:#0f172a; color:#fff; border:none }
+  .btn-secondary:hover{ filter:brightness(1.08) }
+
+  /* Hide any stray instructions section if present */
+  #instructions{display:none!important}
+
   @media (max-width:820px){.grid{grid-template-columns:1fr}}
-#instructions{display:none!important}
 </style>
 </head>
 <body>
@@ -84,7 +97,7 @@
         <span class="badge"><span class="dot"></span> English: <strong>30 WPM</strong></span>
         <span class="badge"><span class="dot"></span> Hindi: <strong>25 WPM</strong></span>
         <span class="badge"><span class="dot"></span> Duration: <strong>5 + 5 Minutes</strong></span>
-        
+        <!-- removed: 5 keystrokes = 1 word -->
       </div>
 
       <div class="controls">
@@ -111,25 +124,10 @@
     <!-- Toast area (under header) -->
     <div id="toastWrap"><div id="toast">⚠️ CTRL/CMD or Paste not allowed</div></div>
 
-    <!-- RULES (visible before start, hidden during the test) -->
-    <section class="section" id="instructions">
-      <h3>Evaluation Rules</h3>
-      <div class="rows">
-        <div class="row"><div class="kbd">1</div><div><b>Net Speed</b>: English 30 WPM, Hindi 25 WPM. <b>5 keystrokes = 1 word</b>.</div></div>
-        <div class="row"><div class="kbd">2</div><div>English target = 150 words (750 keystrokes), Hindi = 125 words (625 keystrokes) in <b>5 minutes</b>. <i>Space counts as one keystroke.</i></div></div>
-        <div class="row"><div class="kbd">3</div><div><b>Highlights:</b> current = <span style="background:var(--cur-yellow); padding:2px 6px; border-radius:6px">yellow</span>, correct = <span style="background:var(--ok-grey); padding:2px 6px; border-radius:6px">light grey</span>, wrong = <span style="background:var(--err-red); padding:2px 6px; border-radius:6px">red</span>.</div></div>
-        <div class="row"><div class="kbd">4</div><div><b>Backspace</b>: only current & previous word (edit allowed only within the last <b>2 spaces</b> of what you typed).</div></div>
-        <div class="row"><div class="kbd">5</div><div><b>Ctrl/Cmd</b> not allowed (blocks copy/paste/refresh).</div></div>
-        <div class="row"><div class="kbd">6</div><div>Auto-scroll enabled. Refresh/reload blocked during test.</div></div>
-        <div class="row"><div class="kbd">7</div><div>Errors: first <b>5 free</b>, then <b>−5 correct words</b> per extra mistake. <i>Full</i> = incorrect/omitted word; <i>Partial</i> = order/spacing/case/punctuation.</div></div>
-        <div class="row"><div class="kbd">8</div><div>Hindi font: <b>Noto Sans Devanagari</b> (default) or system fonts like <b>Mangal</b>/<b>Kruti Dev 010</b>.</div></div>
-      </div>
-    </section>
-
     <!-- REFERENCE TEXT -->
     <section class="section">
       <h3>Reference Text</h3>
-      <div id="textDisplay" class="scroll">Click "Start English" to begin</div>
+      <div id="textDisplay" class="scroll">Select a passage and click “Start”.</div>
     </section>
 
     <!-- TYPING AREA -->
@@ -140,7 +138,7 @@
           autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false"
           style="width:100%; height:140px; border:none; outline:none; background:transparent; font-size:14px; line-height:1.6;"></textarea>
       </div>
-      <small class="note">Type exactly. Backspace: current & previous word only (allowed within last two spaces of your text).</small>
+      <small class="note">Backspace edits allowed only within the last two spaces of your text; Space is blocked once you reach the passage word-count.</small>
     </section>
 
     <!-- RESULTS -->
@@ -166,17 +164,62 @@
           <span class="note">Both languages must meet minimum net WPM.</span>
         </div>
       </div>
-      <div id="preResultsNote" class="note">Results will appear after each stage and a combined summary at the end.</div>
+      <div id="preResultsNote" class="note">Results appear after each stage and a combined summary at the end.</div>
     </section>
   </div>
 
-  <script defer src="./passages.js?v=1"></script>
+  <!-- INSTRUCTIONS MODAL -->
+  <div id="instBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="instTitle">
+    <div class="modal">
+      <header id="instTitle">Typing Test Instructions</header>
+      <div class="modal-body" id="instBody">
+        <p>The candidates will be provided with the master text passage of about 1500 key depressions in English.</p>
+        <p>The typing can be either word based typing or key strokes based typing.</p>
+        <p>For example, 35 w.p.m. is about 10500 key depressions per hour and 30 w.p.m. corresponds to about 9000 key depression per hour.</p>
+        <p>The duration of the English typing test is <strong>05:00 minute</strong>.</p>
+        <p>The countdown timer in the top right corner of the screen will display the remaining time available for you to complete the examination. When the timer reaches zero, the examination will end by itself with typed passage, you are not required to end or submit your test.</p>
+        <p>Candidates are not required to repeat the passage, if he/she has completed the passage once and has time in his/her disposal, however they are allowed to revise and correct their mistakes and inaccuracies, if any, during the prescribed time</p>
+        <p>After every punctuation mark, only <strong>one space</strong> is to be inserted, e.g. after comma, full stop, mark of interrogation etc. However, candidates are advised to follow the Question paper scrupulously in this regard.</p>
+        <p>The combination of alphanumeric keys followed by one space is termed as one “Word”.</p>
+        <p>Once you have completed typing of the given passage and you do not find any errors or mistakes in it, you may submit it by pressing the submit button. After submission no editing or change in the typed passage is possible.</p>
+        <p>If your computer is locked/switched off or for any type of technical help, please inform a nearby invigilator immediately.</p>
+        <p>In any case of auto restart of the computer, you will be again provided with the full time to type the given passage.</p>
+        <p>After typing a given number of words in the master text passage the <strong>space bar will not allow further typing of additional words</strong>. For example, if there are 500 words in the master text passage, candidates can type only 500 words and after that space bar will not allow the candidates to type any additional word, however, the keyboard will allow the candidate to continue typing without using the space bar.</p>
+      </div>
+      <footer>
+        <button id="instCancel" class="btn">Cancel</button>
+        <button id="instOk" class="btn btn-secondary">I Agree, Start</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Inline passages (fastest, zero network) -->
+  <script id="passages" type="application/json">
+  {
+    "sets": [
+      {
+        "id": "default",
+        "label": "Default (Medium)",
+        "difficulty": "medium",
+        "english": "The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
+        "hindi": "उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।"
+      }
+      /* Add more sets here if you like:
+      ,{
+        "id":"practice-1","label":"Practice Set 1 (Easy)","difficulty":"easy",
+        "english":"...", "hindi":"..."
+      }
+      */
+    ]
+  }
+  </script>
+
   <script>
   document.addEventListener('DOMContentLoaded', function(){
-    /* ===== Passages (loaded from external JSON) ===== */
+    /* ===== Passages (from inline JSON) ===== */
     var englishPassage = "";
     var hindiPassage   = "";
-    var passageSets = [];
+    var passageSets = [];   // array of {id,label,english,hindi,difficulty?}
     var selectedSetId = null;
 
     /* ===== Elements ===== */
@@ -209,7 +252,10 @@
       passageLabel: document.getElementById('passageLabel'),
       toastWrap:  document.getElementById('toastWrap'),
       toast:      document.getElementById('toast'),
-      instructions: document.getElementById('instructions')
+      // Modal
+      instBackdrop: document.getElementById('instBackdrop'),
+      instOk: document.getElementById('instOk'),
+      instCancel: document.getElementById('instCancel')
     };
 
     /* ===== Toast ===== */
@@ -229,162 +275,7 @@
     var passage = '';
     var startedAt = null;
     var results = { EN:null, HI:null };
-
-    /* ===== Load passages from passages.json ===== */
-    async function loadPassages(){
-      // Watchdog: if something blocks initialization, force-enable defaults after 2s
-      var watchdog = setTimeout(function(){
-        try{
-          if (!passageSets || !passageSets.length){
-            console.warn('[TypingTest] passages.js missing or late — using built-in default.');
-            passageSets = [{ id:'default', label:'Default (Built-in)',
-              english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
-              hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।",
-              difficulty:'medium' }];
-            els.passageSet.innerHTML = '<option value="default">Default (Built-in)</option>';
-            els.passageSet.value = 'default';
-            applySet('default');
-            els.startBtn.disabled = false; els.startBtn.textContent = 'Start English';
-            showToast('Using built-in passages. Check passages.js.');
-          }
-        }catch(err){ console.error(err); }
-      }, 2000);
-
-      try{
-        // Read passages from a pre-loaded JS data file (no fetch for speed)
-        var data = window.PASSAGES || {};
-        var sets = [];
-        if (Array.isArray(data.sets)){
-          sets = data.sets.filter(function(s){ return s && s.english && s.hindi; });
-        } else if (data.english && data.hindi){
-          sets = [{ id: data.id || 'default', label: data.label || 'Default', english: data.english, hindi: data.hindi, difficulty: data.difficulty || 'medium' }];
-        }
-
-        if (!sets.length){
-          console.warn('[TypingTest] window.PASSAGES missing/invalid — falling back to built-in.');
-          sets = [{ id:'default', label:'Default (Built-in)',
-            english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
-            hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।",
-            difficulty:'medium' }];
-        }
-
-        passageSets = sets.map(function(s,idx){ return Object.assign({ id: s.id || ('set-'+idx), label: s.label || ('Set '+(idx+1)) }, s); });
-        els.passageSet.innerHTML = passageSets.map(function(s){ return '<option value="'+s.id+'">'+s.label+'</option>'; }).join('');
-        els.passageSet.value = passageSets[0].id;
-        applySet(passageSets[0].id);
-
-        els.startBtn.disabled = false;
-        els.startBtn.textContent = 'Start English';
-      }catch(err){
-        console.error('[TypingTest] loadPassages error', err);
-        showToast('Unable to load passages — using built-in.');
-        passageSets = [{ id:'default', label:'Default (Built-in)', english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
-          hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।" }];
-        els.passageSet.innerHTML = '<option value="default">Default (Built-in)</option>';
-        els.passageSet.value = 'default';
-        applySet('default');
-        els.startBtn.disabled = false; els.startBtn.textContent = 'Start English';
-      } finally {
-        clearTimeout(watchdog);
-      }
-    };
-      var sets = [];
-      if (Array.isArray(data.sets)){
-        sets = data.sets.filter(function(s){ return s && s.english && s.hindi; });
-      } else if (data.english && data.hindi){
-        sets = [{ id: data.id || 'default', label: data.label || 'Default', english: data.english, hindi: data.hindi, difficulty: data.difficulty || 'medium' }];
-      }
-
-      if (!sets.length){
-        // Built-in fallback (very small) if passages.js is missing
-        sets = [{ id:'default', label:'Default (Built-in)',
-          english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
-          hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।",
-          difficulty:'medium' }];
-      }
-
-      passageSets = sets.map(function(s,idx){ return Object.assign({ id: s.id || ('set-'+idx), label: s.label || ('Set '+(idx+1)) }, s); });
-      els.passageSet.innerHTML = passageSets.map(function(s){ return '<option value="'+s.id+'">'+s.label+'</option>'; }).join('');
-      els.passageSet.value = passageSets[0].id;
-      applySet(passageSets[0].id);
-
-      els.startBtn.disabled = false;
-      els.startBtn.textContent = 'Start English';
-    }];
-      els.passageSet.innerHTML = '<option value="default">Default</option>';
-      els.passageSet.value = 'default';
-      applySet('default');
-      els.startBtn.disabled = false;
-      els.startBtn.textContent = 'Start English';
-
-      // Now fetch external JSON (cached) and swap in when ready
-      try{
-        const res = await fetch('./passages.json?v=1'); // bump v when you update
-        if(!res.ok) throw new Error('Failed to load passages.json');
-        const data = await res.json();
-
-        let sets = [];
-        if (Array.isArray(data.sets)) {
-          sets = data.sets.filter(s => s && s.english && s.hindi);
-        } else if (data.english && data.hindi) {
-          sets = [{ id:'default', label: data.label || 'Default', english: data.english, hindi: data.hindi, difficulty: data.difficulty || 'medium' }];
-        }
-        if (!sets.length) return; // keep instant default
-
-        passageSets = sets.map((s, i) => Object.assign({ id: s.id || ('set-'+i), label: s.label || ('Set '+(i+1)) }, s));
-        els.passageSet.innerHTML = passageSets.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
-        els.passageSet.value = passageSets[0].id;
-        applySet(passageSets[0].id);
-      }catch(e){
-        // Keep instant default silently
-      }
-    });
-        if(!res.ok) throw new Error('Failed to load passages.json');
-        const data = await res.json();
-
-        if (Array.isArray(data.sets)){
-          passageSets = data.sets.filter(function(s){ return s && s.english && s.hindi; });
-        } else {
-          passageSets = [{ id:'default', label:'Default (Medium)', english:(data.english||''), hindi:(data.hindi||''), difficulty:data.difficulty||'medium' }];
-        }
-        if (!passageSets.length) throw new Error('No passages found');
-
-        // Normalize ids/labels and populate dropdown
-        passageSets = passageSets.map(function(s,idx){ return Object.assign({ id: s.id || ('set-'+idx), label: s.label || ('Set '+(idx+1)) }, s); });
-        els.passageSet.innerHTML = passageSets.map(function(s){ return '<option value="'+s.id+'">'+s.label+'</option>'; }).join('');
-        els.passageSet.value = passageSets[0].id;
-        applySet(passageSets[0].id);
-
-        els.startBtn.disabled = false;
-        els.startBtn.textContent = 'Start English';
-      }catch(err){
-        showToast('⚠️ Could not load passages. Using built-in defaults.');
-        passageSets = [{ id:'default', label:'Default (Built-in)', english: "The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
-                         hindi: "उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।",
-                         difficulty:'medium' }];
-        els.passageSet.innerHTML = '<option value="default">Default (Built-in)</option>';
-        els.passageSet.value = 'default';
-        applySet('default');
-        els.startBtn.disabled = false;
-        els.startBtn.textContent = 'Start English';
-      }
-    });
-        if(!res.ok) throw new Error('Failed to load passages.json');
-        const data = await res.json();
-        englishPassage = (data.english || '').trim();
-        hindiPassage   = (data.hindi   || '').trim();
-        if(!englishPassage || !hindiPassage) throw new Error('Empty passages');
-        els.startBtn.disabled = false;
-        els.startBtn.textContent = 'Start English';
-      }catch(err){
-        // Fallback to built-in defaults if external load fails
-        showToast('⚠️ Could not load passages. Using built-in defaults.');
-        englishPassage = englishPassage || "The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.";
-        hindiPassage   = hindiPassage   || "उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।";
-        els.startBtn.disabled = false;
-        els.startBtn.textContent = 'Start English';
-      }
-    }
+    var instructionsAcknowledged = false;
 
     /* ===== Helpers ===== */
     function wordsOf(text){ return text && text.trim().length ? text.trim().split(/\s+/) : []; }
@@ -409,10 +300,7 @@
       selectedSetId = set.id;
       englishPassage = (set.english||'').trim();
       hindiPassage   = (set.hindi||'').trim();
-    } else {
-        els.textDisplay.style.fontFamily = 'Inter, system-ui';
-        els.inputArea.style.fontFamily   = 'Inter, system-ui';
-      }
+      els.textDisplay.textContent = 'Select “Start” to begin.';
     }
     function renderTime(){
       var m = Math.floor(timeLeft/60), s = String(timeLeft%60).padStart(2,'0');
@@ -428,22 +316,68 @@
       if (intervalId) { clearInterval(intervalId); intervalId=null; }
       timeLeft=300; started=false; stage='EN'; results.EN=results.HI=null;
       els.timerEl.textContent='5:00';
-      els.textDisplay.textContent='Click "Start English" to begin';
+      els.textDisplay.textContent='Select a passage and click “Start”.';
       els.inputArea.value=''; els.inputArea.disabled=true; els.submitBtn.classList.add('hidden');
       els.bothResults.classList.add('hidden'); els.preResultsNote.classList.remove('hidden');
       els.startBtn.textContent='Start English';
       els.stageLabel.innerHTML='Stage: <u>English</u> → Hindi';
       els.fontLabel.classList.add('hidden'); els.hindiFont.classList.add('hidden');
-      els.instructions.classList.remove('hidden');  // SHOW instructions before start
       setFonts(); setPassage('');
       setButtonsRunning(false);
+      instructionsAcknowledged = false;
+    }
+
+    /* ===== Load passages from inline JSON ===== */
+    async function loadPassages(){
+      // Watchdog: fallback to built-in default if parsing fails quickly
+      var watchdog = setTimeout(function(){
+        if (!passageSets || !passageSets.length){
+          passageSets = [{
+            id:'default', label:'Default (Built-in)',
+            english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
+            hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।"
+          }];
+          els.passageSet.innerHTML = '<option value="default">Default (Built-in)</option>';
+          els.passageSet.value = 'default';
+          applySet('default');
+          els.startBtn.disabled = false;
+          els.startBtn.textContent = 'Start English';
+          showToast('Using built-in passages (inline JSON missing/invalid).');
+        }
+      }, 1000);
+
+      try{
+        var raw = (document.getElementById('passages') || {}).textContent || '{}';
+        var data = JSON.parse(raw);
+
+        var sets = [];
+        if (Array.isArray(data.sets)) {
+          sets = data.sets.filter(function(s){ return s && s.english && s.hindi; });
+        } else if (data.english && data.hindi) {
+          sets = [data];
+        }
+
+        if (!sets.length) throw new Error('No passages in inline JSON');
+
+        passageSets = sets.map(function(s,i){ return Object.assign({ id: s.id || ('set-'+i), label: s.label || ('Set '+(i+1)) }, s); });
+        els.passageSet.innerHTML = passageSets.map(function(s){ return '<option value="'+s.id+'">'+s.label+'</option>'; }).join('');
+        els.passageSet.value = passageSets[0].id;
+        applySet(passageSets[0].id);
+
+        els.startBtn.disabled = false;
+        els.startBtn.textContent = 'Start English';
+      } catch(err){
+        console.error('[TypingTest] Inline passages parse error:', err);
+        // watchdog will handle fallback
+      } finally {
+        clearTimeout(watchdog);
+      }
     }
 
     /* ===== Flow ===== */
     function startStage(){
       if (started) return;
       started = true; timeLeft=300; startedAt=Date.now(); els.timerEl.textContent='5:00';
-      els.instructions.classList.add('hidden');   // HIDE instructions after start
       els.inputArea.value=''; els.inputArea.disabled=false; els.inputArea.focus();
       els.submitBtn.classList.remove('hidden'); els.preResultsNote.classList.remove('hidden');
       setButtonsRunning(true);
@@ -506,18 +440,18 @@
       for (var i=0;i<refWords.length;i++){
         var span = spans[i];
         var tw = typedWords[i];
-        if (tw==null){ continue; }              // omissions counted later as full errors
+        if (tw==null){ continue; }
         if (tw === refWords[i]) span.classList.add('ok');
         else { span.classList.add('err'); partial++; }
       }
-      if (typedWords.length < refWords.length){ full = refWords.length - typedWords.length; }     // omissions = full
-      if (typedWords.length > refWords.length){ partial += (typedWords.length - refWords.length); } // extras = partial
+      if (typedWords.length < refWords.length){ full = refWords.length - typedWords.length; }
+      if (typedWords.length > refWords.length){ partial += (typedWords.length - refWords.length); }
 
       var curIndex = Math.max(0, typedWords.length - 1);
       var curSpan = spans[curIndex]; if (curSpan){ curSpan.classList.add('cur'); curSpan.scrollIntoView({block:'nearest', inline:'nearest'}); }
 
-      var keystrokes = typedRaw.length;     // every char incl. spaces
-      var grossWords = keystrokes / 5;      // 5 keystrokes = 1 word
+      var keystrokes = typedRaw.length;
+      var grossWords = keystrokes / 5;   // spec says 5 keys = 1 word (kept internally)
       var grossWPM = grossWords / minutes;
 
       var totalErrors = full + partial;
@@ -574,17 +508,15 @@
 
     /* ===== Backspace/Delete/Cut: ONLY within last TWO spaces of typed text ===== */
     function allowedBackspaceMinBySpaces(val){
-      // Collect indices of every space in current typed text
       var spaces = [];
       for (var i=0;i<val.length;i++){ if (val[i] === ' ') spaces.push(i); }
-      if (spaces.length <= 2) return 0;                 // if <=2 spaces typed, allow from start
-      return spaces[spaces.length - 3] + 1;             // lock everything before the 3rd-from-last space
+      if (spaces.length <= 2) return 0;
+      return spaces[spaces.length - 3] + 1;   // lock before 3rd-from-last space
     }
 
     /* ===== Global Ctrl/Cmd/Refresh toast ===== */
     window.addEventListener('keydown', function(e){
       if (!started) return;
-      // Block refresh keys
       if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'r'))){
         showToast('⚠️ CTRL/CMD or Paste not allowed');
         e.preventDefault();
@@ -606,8 +538,10 @@
       if (type === 'deleteContentBackward' || type === 'deleteContentForward' || type === 'deleteByCut'){
         var text = e.target.value;
         var selStart = e.target.selectionStart;
+        var selEnd   = e.target.selectionEnd;
         var minIdx = allowedBackspaceMinBySpaces(text);
-        if (selStart <= minIdx){ e.preventDefault(); return; }
+        var leftMost = Math.min(selStart, selEnd);
+        if (leftMost <= minIdx){ e.preventDefault(); return; }
       }
     });
 
@@ -626,7 +560,7 @@
         e.preventDefault(); return;
       }
 
-      // Prevent space after typed words reach passage word count (spec)
+      // Prevent space after typed words reach passage word count
       if (e.key === ' '){
         var refCount = passage.split(/\s+/).length;
         var typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
@@ -642,21 +576,6 @@
         var leftMost = Math.min(start, end);
         if (leftMost <= minIdx){ e.preventDefault(); return; }
       }
-    }); }
-        e.preventDefault(); return;
-      }
-      // Shift+Insert paste
-      if (e.shiftKey && e.key === 'Insert'){
-        showToast('⚠️ CTRL/CMD or Paste not allowed');
-        e.preventDefault(); return;
-      }
-      // Backspace/Delete fallback
-      if (e.key === 'Backspace' || e.key === 'Delete'){
-        var text  = e.target.value;
-        var start = e.target.selectionStart;
-        var minIdx = allowedBackspaceMinBySpaces(text);
-        if (start <= minIdx){ e.preventDefault(); return; }
-      }
     });
 
     // Mouse/context paste fallback
@@ -670,9 +589,20 @@
     // Prevent unload/refresh during test
     window.addEventListener('beforeunload', function(e){ if (!started) return; e.preventDefault(); e.returnValue=''; });
 
+    /* ===== Modal helpers ===== */
+    function openModal(){ els.instBackdrop.style.display='flex'; }
+    function closeModal(){ els.instBackdrop.style.display='none'; }
+    els.instCancel.addEventListener('click', function(){ closeModal(); });
+    els.instOk.addEventListener('click', function(){
+      instructionsAcknowledged = true;
+      closeModal();
+      startStage();
+    });
+
     // Buttons
     els.startBtn.addEventListener('click', function(){
       if (els.startBtn.textContent==='Restart'){ resetAll(); return; }
+      if (!instructionsAcknowledged && stage === 'EN'){ openModal(); return; }
       startStage();
     });
     els.submitBtn.addEventListener('click', function(){
