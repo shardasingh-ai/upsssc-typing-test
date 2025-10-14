@@ -73,6 +73,7 @@
   #toastWrap.show #toast{ opacity:1; }
 
   @media (max-width:820px){.grid{grid-template-columns:1fr}}
+#instructions{display:none!important}
 </style>
 </head>
 <body>
@@ -83,7 +84,7 @@
         <span class="badge"><span class="dot"></span> English: <strong>30 WPM</strong></span>
         <span class="badge"><span class="dot"></span> Hindi: <strong>25 WPM</strong></span>
         <span class="badge"><span class="dot"></span> Duration: <strong>5 + 5 Minutes</strong></span>
-        <span class="badge"><span class="dot"></span> 5 keystrokes = 1 word</span>
+        
       </div>
 
       <div class="controls">
@@ -230,8 +231,41 @@
 
     /* ===== Load passages from passages.json ===== */
     async function loadPassages(){
+      // Instant default so UI is usable immediately
+      passageSets = [{
+        id:'default', label:'Default',
+        english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
+        hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।",
+        difficulty:'medium'
+      }];
+      els.passageSet.innerHTML = '<option value="default">Default</option>';
+      els.passageSet.value = 'default';
+      applySet('default');
+      els.startBtn.disabled = false;
+      els.startBtn.textContent = 'Start English';
+
+      // Now fetch external JSON (cached) and swap in when ready
       try{
-        const res = await fetch('./passages.json', { cache: 'no-store' });
+        const res = await fetch('./passages.json?v=1'); // bump v when you update
+        if(!res.ok) throw new Error('Failed to load passages.json');
+        const data = await res.json();
+
+        let sets = [];
+        if (Array.isArray(data.sets)) {
+          sets = data.sets.filter(s => s && s.english && s.hindi);
+        } else if (data.english && data.hindi) {
+          sets = [{ id:'default', label: data.label || 'Default', english: data.english, hindi: data.hindi, difficulty: data.difficulty || 'medium' }];
+        }
+        if (!sets.length) return; // keep instant default
+
+        passageSets = sets.map((s, i) => Object.assign({ id: s.id || ('set-'+i), label: s.label || ('Set '+(i+1)) }, s));
+        els.passageSet.innerHTML = passageSets.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+        els.passageSet.value = passageSets[0].id;
+        applySet(passageSets[0].id);
+      }catch(e){
+        // Keep instant default silently
+      }
+    });
         if(!res.ok) throw new Error('Failed to load passages.json');
         const data = await res.json();
 
