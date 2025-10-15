@@ -40,8 +40,8 @@
   .inputbox{min-height:160px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#f8fafc}
 
   /* Typing visuals */
-  #textDisplay span.ok{ color:#6b7280; }          /* correct = grey text */
-  #textDisplay span.err{ color:var(--err-red); }  /* wrong = red text */
+  #textDisplay span.ok{ color:#6b7280; }          /* correct = grey text only */
+  #textDisplay span.err{ color:var(--err-red); }  /* wrong = red text only */
   #textDisplay span.cur{ background:var(--cur-yellow); color:#111827; padding:2px 3px; border-radius:4px }
 
   .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
@@ -299,33 +299,13 @@ document.addEventListener('DOMContentLoaded', function(){
     setButtonsRunning(false);
   }
 
-  /* ===== Backspace/Delete/Cut limited to last TWO spaces ===== */
-  function backspaceBoundary(val){
-    const spaces = [];
-    for (let i=0;i<val.length;i++){ if (val[i]===' ') spaces.push(i); }
-    if (spaces.length <= 2) return 0;                 // <=2 spaces typed ⇒ free to edit anywhere
-    return spaces[spaces.length - 3] + 1;             // lock before this index
-  }
-  function preventIfOutsideDeletionWindow(e){
-    const ta = e.target;
-    const val = ta.value;
-    const start = ta.selectionStart;
-    const end   = ta.selectionEnd;
-    const minIdx = backspaceBoundary(val);
-
-    // selection deletion touching boundary
-    const leftMost = Math.min(start, end);
-    if (leftMost <= minIdx){ e.preventDefault(); return true; }
-
-    // single-caret deletion
-    const t = e.inputType || '';
-    const backward = /delete(Content|Word|SoftLine|HardLine)Backward|deleteByCut/.test(t);
-    const forward  = /delete(Content|Word|SoftLine|HardLine)Forward/.test(t) || (t.startsWith('delete') && !backward);
-
-    if (backward && (start-1) <= minIdx){ e.preventDefault(); return true; }
-    if (forward  &&  start    <= minIdx){ e.preventDefault(); return true; }
-
-    return false;
+  /* ===== Backspace/Delete/Cut: ONLY within last TWO spaces of typed text ===== */
+  function allowedBackspaceMinBySpaces(val){
+    // indices of literal spaces typed via spacebar
+    var spaces = [];
+    for (var i=0;i<val.length;i++){ if (val[i] === ' ') spaces.push(i); }
+    if (spaces.length <= 2) return 0;                 // if <=2 spaces typed, allow from start
+    return spaces[spaces.length - 3] + 1;             // lock everything before the 3rd-from-last space
   }
 
   /* ===== Flow ===== */
@@ -414,8 +394,8 @@ document.addEventListener('DOMContentLoaded', function(){
       const span = spans[i];
       const tw = typedWords[i];
       if (tw==null){ continue; }
-      if (tw === refWords[i]) span.classList.add('ok');   // grey text
-      else { span.classList.add('err'); partial++; }      // red text
+      if (tw === refWords[i]) span.classList.add('ok');   // correct -> grey text
+      else { span.classList.add('err'); partial++; }      // wrong   -> red text
     }
     if (typedWords.length < refWords.length){ full = refWords.length - typedWords.length; }
     if (typedWords.length > refWords.length){ partial += (typedWords.length - refWords.length); }
@@ -451,7 +431,6 @@ document.addEventListener('DOMContentLoaded', function(){
       els.fullHI.textContent=full; els.partialHI.textContent=partial;
       els.penaltyHI.innerHTML=penaltyWords+'<span class="u"> Words</span>';
       els.badgeHI.className = passed ? 'pill-pass' : 'pill-fail';
-      els.badgeHI.textContent = 'HI: ' + (passed ? 'PASS' : 'FAIL');
       els.bothResults.classList.remove('hidden'); els.preResultsNote.classList.add('hidden');
     }
 
@@ -488,55 +467,64 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  // PRIMARY: beforeinput blocks all delete variants
+  /* ===== BEFOREINPUT: block paste & deletion across boundary (YOUR CODE) ===== */
   els.inputArea.addEventListener('beforeinput', function(e){
     if (!started) return;
+    var type = e.inputType;
 
-    if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop'){
+    // Any paste/drop
+    if (type === 'insertFromPaste' || type === 'insertFromDrop'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
 
-    if (e.inputType && e.inputType.startsWith('delete')){
-      if (preventIfOutsideDeletionWindow(e)) return;
+    // Deletions (backspace, delete, cut)
+    if (type === 'deleteContentBackward' || type === 'deleteContentForward' || type === 'deleteByCut'){
+      var text = e.target.value;
+      var selStart = e.target.selectionStart;
+      var selEnd   = e.target.selectionEnd;
+      var minIdx = allowedBackspaceMinBySpaces(text);
+
+      // If any part of the deletion would cross the boundary, block it
+      var leftMost = Math.min(selStart, selEnd);
+      if (leftMost <= minIdx){ e.preventDefault(); return; }
     }
   });
 
-  // FALLBACK: keydown
+  /* ===== Keydown fallback (YOUR CODE) ===== */
   els.inputArea.addEventListener('keydown', function(e){
     if (!started) return;
 
+    // Ctrl/Cmd-anything
     if (e.ctrlKey || e.metaKey){
       if (e.key !== 'Control' && e.key !== 'Meta'){ showToast('⚠️ CTRL/CMD or Paste not allowed'); }
       e.preventDefault(); return;
     }
+    // Shift+Insert paste
     if (e.shiftKey && e.key === 'Insert'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
 
-    // Prevent space beyond reference word count
+    // Prevent space after typed words reach passage word count (spec)
     if (e.key === ' '){
-      const refCount = passage.split(/\s+/).length;
-      const typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
+      var refCount = passage.split(/\s+/).length;
+      var typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
       if (typedCount >= refCount){ e.preventDefault(); return; }
     }
 
-    // Backspace/Delete fallback across selection
+    // Backspace/Delete boundary
     if (e.key === 'Backspace' || e.key === 'Delete'){
-      const fake = { target: els.inputArea, preventDefault: ()=>e.preventDefault(),
-                     inputType: (e.key==='Backspace' ? 'deleteContentBackward' : 'deleteContentForward') };
-      if (preventIfOutsideDeletionWindow(fake)) return;
+      var text  = els.inputArea.value;
+      var start = els.inputArea.selectionStart;
+      var end   = els.inputArea.selectionEnd;
+      var minIdx = allowedBackspaceMinBySpaces(text);
+      var leftMost = Math.min(start, end);
+      if (leftMost <= minIdx){ e.preventDefault(); return; }
     }
   });
 
-  // Context-menu "Cut" fallback
-  els.inputArea.addEventListener('cut', function(e){
-    if (!started) return;
-    const fake = { target: els.inputArea, preventDefault: ()=>e.preventDefault(), inputType: 'deleteByCut' };
-    if (preventIfOutsideDeletionWindow(fake)) return;
-  });
-
+  // Block paste via context menu as well
   els.inputArea.addEventListener('paste', function(e){
     showToast('⚠️ CTRL/CMD or Paste not allowed');
     e.preventDefault();
