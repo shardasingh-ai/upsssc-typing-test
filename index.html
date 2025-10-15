@@ -14,7 +14,7 @@
     --accent:#22c55e; --accent-700:#16a34a; --danger:#ef4444; --warning:#f59e0b;
     --ring:0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(2,6,23,.10);
     --soft:0 1px 2px rgba(2,6,23,.05); --radius:14px;
-    --ok-grey:#e5e7eb; --cur-yellow:#fef08a; --err-red:#fecaca;
+    --ok-grey:#e5e7eb; --cur-yellow:#fef08a; --err-red:#b91c1c;
   }
   *{box-sizing:border-box}
   body{margin:0; font:14px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; color:var(--text); background:var(--bg)}
@@ -39,8 +39,9 @@
   .scroll{max-height:210px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#fff}
   .inputbox{min-height:160px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#f8fafc}
 
+  /* Visuals during typing */
   #textDisplay span.ok{background:var(--ok-grey); color:#111827; padding:2px 3px; border-radius:4px}
-  #textDisplay span.err{background:var(--err-red); color:#7f1d1d; text-decoration:underline; text-decoration-color:#b91c1c; padding:2px 3px; border-radius:4px}
+  #textDisplay span.err{color:var(--err-red);}          /* red text only, no highlight/underline */
   #textDisplay span.cur{background:var(--cur-yellow); color:#111827; padding:2px 3px; border-radius:4px}
 
   .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function(){
     inputArea:  document.getElementById('inputArea'),
     startBtn:   document.getElementById('startBtn'),
     submitBtn:  document.getElementById('submitBtn'),
-    resetBtn:   document.getElementById('resetBtn'),
+    resetBtn:  document.getElementById('resetBtn'),
     timerEl:    document.getElementById('timerEl'),
     bothResults:document.getElementById('bothResults'),
     preResultsNote: document.getElementById('preResultsNote'),
@@ -295,7 +296,7 @@ After typing a given number of words in the master text passage the space bar wi
     setButtonsRunning(false);
   }
 
-  /* ===== Backspace/Delete/Cut: ONLY within last TWO spaces ===== */
+  /* ===== Backspace/Delete/Cut limited to last TWO spaces ===== */
   function allowedBackspaceMinBySpaces(val){
     const spaces = [];
     for (let i=0;i<val.length;i++){ if (val[i]===' ') spaces.push(i); }
@@ -337,7 +338,6 @@ After typing a given number of words in the master text passage the space bar wi
   }
 
   function openInstructionsAndStart(){
-    // Fill and open modal
     els.instrBody.textContent = INSTRUCTIONS_TEXT;
     els.instrBackdrop.classList.add('show');
 
@@ -353,7 +353,6 @@ After typing a given number of words in the master text passage the space bar wi
 
   function startStage(){
     if (started) return;
-    // show modal, and then start
     setButtonsRunning(true);
     openInstructionsAndStart();
   }
@@ -401,13 +400,13 @@ After typing a given number of words in the master text passage the space bar wi
     const curSpan = spans[curIndex]; if (curSpan){ curSpan.classList.add('cur'); curSpan.scrollIntoView({block:'nearest', inline:'nearest'}); }
 
     const keystrokes = typedRaw.length;
-    const grossWords = keystrokes / 5;        // spec: 5 keystrokes = 1 word (kept only for calculation)
+    const grossWords = keystrokes / 5;        // calc only
     const grossWPM = grossWords / minutes;
 
     const totalErrors = full + partial;
     const grace = 5;
     const extraErrors = Math.max(0, totalErrors - grace);
-    const penaltyWords = extraErrors * 5;     // −5 correct words per extra mistake
+    const penaltyWords = extraErrors * 5;
     const netWords = Math.max(0, grossWords - penaltyWords);
     const netWPM = netWords / minutes;
 
@@ -432,7 +431,7 @@ After typing a given number of words in the master text passage the space bar wi
       els.bothResults.classList.remove('hidden'); els.preResultsNote.classList.add('hidden');
     }
 
-    return { grossWPM:grossWPM, netWPM:netWPM, fullErrors:full, partialErrors:partial, penaltyWords:penaltyWords, passed:passed };
+    return { grossWPM, netWPM, fullErrors:full, partialErrors:partial, penaltyWords, passed };
   }
 
   function showCombinedResults(){
@@ -465,19 +464,22 @@ After typing a given number of words in the master text passage the space bar wi
     }
   });
 
-  // beforeinput guard
+  // beforeinput guard — now handles all delete types
   els.inputArea.addEventListener('beforeinput', function(e){
     if (!started) return;
     const type = e.inputType;
 
+    // Block paste/drop
     if (type === 'insertFromPaste' || type === 'insertFromDrop'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
-    if (type === 'deleteContentBackward' || type === 'deleteContentForward' || type === 'deleteByCut'){
+
+    // Block ANY deletion beyond boundary (covers deleteWordBackward/Forward, etc.)
+    if (type.startsWith('delete')){
       const text = e.target.value;
       const selStart = e.target.selectionStart;
-      const selEnd = e.target.selectionEnd;
+      const selEnd   = e.target.selectionEnd;
       const minIdx = allowedBackspaceMinBySpaces(text);
       const leftMost = Math.min(selStart, selEnd);
       if (leftMost <= minIdx){ e.preventDefault(); return; }
@@ -536,11 +538,12 @@ After typing a given number of words in the master text passage the space bar wi
   els.hindiFont.addEventListener('change', setFonts);
   els.passageSet.addEventListener('change', function(){ if (started) return; applySet(els.passageSet.value); });
 
-  /* ===== Load passages.json (clean + robust) ===== */
+  /* ===== Load passages.json (robust) ===== */
   async function loadPassages(){
     try{
-      const res = await fetch('./passages.json', { cache: 'no-store' });
-      if(!res.ok) throw new Error('Failed to load passages.json');
+      // Cache-buster avoids stale JSON on GitHub Pages
+      const res = await fetch('./passages.json?ts=' + Date.now(), { cache: 'no-store' });
+      if(!res.ok) throw new Error('Failed to load passages.json: HTTP ' + res.status);
       const data = await res.json();
 
       let sets = [];
@@ -558,12 +561,11 @@ After typing a given number of words in the master text passage the space bar wi
       els.passageSet.value = passageSets[0].id;
       applySet(passageSets[0].id);
 
-      // enable Start
       els.startBtn.disabled = false;
       els.startBtn.textContent = 'Start English';
     }catch(e){
-      console.error(e);
-      // Fallback: Single built-in set so the app is still usable
+      console.error('[passages.json] load error:', e);
+      // Fallback single set
       passageSets = [{
         id:'default', label:'Default',
         english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
@@ -574,7 +576,7 @@ After typing a given number of words in the master text passage the space bar wi
       applySet('default');
       els.startBtn.disabled = false;
       els.startBtn.textContent = 'Start English';
-      showToast('⚠️ passages.json not found/invalid — using built-in default.');
+      showToast('⚠️ Could not load passages.json — using built-in default.');
     }
   }
 
