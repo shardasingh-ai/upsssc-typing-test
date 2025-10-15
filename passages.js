@@ -1,102 +1,55 @@
-[
+const passages = [
+  // ---------- English Passages ----------
   {
-    "id": "EN1",
-    "language": "English",
-    "text": "The changing climate is not just an environmental concern; it is a mirror reflecting human choices. Every degree of temperature rise, every vanishing glacier, and every dried river tells a story of neglect. Yet, the story need not end in tragedy. Individuals today hold immense power to alter this trajectory. Simple actions like reducing plastic usage, choosing public transport, and planting native trees can create ripples of change. Governments across the world are slowly realizing that sustainability is not an option—it is a necessity. The challenge lies not in awareness but in consistent action. Nature, though patient, keeps precise accounts. The forests that burn and the oceans that rise remind us that the bill for indifference is already due. Hope, however, resides in innovation. Young minds are designing biodegradable materials, carbon-neutral technologies, and smarter cities. If human creativity built the industrial age, it can surely engineer a sustainable one. The planet does not need saving—it will survive; it is humanity that must adapt to survive with it."
+    id: "EN1",
+    language: "English",
+    text: "The changing climate is not just an environmental concern; it is a mirror reflecting human choices. Every degree of temperature rise, every vanishing glacier, and every dried river tells a story of neglect. Yet, the story need not end in tragedy. Individuals today hold immense power to alter this trajectory. Simple actions like reducing plastic usage, choosing public transport, and planting native trees can create ripples of change. Governments across the world are slowly realizing that sustainability is not an option—it is a necessity. The challenge lies not in awareness but in consistent action. Nature, though patient, keeps precise accounts. The forests that burn and the oceans that rise remind us that the bill for indifference is already due. Hope, however, resides in innovation. Young minds are designing biodegradable materials, carbon-neutral technologies, and smarter cities. If human creativity built the industrial age, it can surely engineer a sustainable one. The planet does not need saving—it will survive; it is humanity that must adapt to survive with it."
   },
   {
-    "id": "EN2",
-    "language": "English",
-    "text": "Artificial Intelligence, often hailed as the new electricity, is transforming industries and redefining human potential. Yet, behind the glitter of progress lies an ethical labyrinth. Machines are learning faster than laws can adapt, and algorithms are beginning to shape decisions once made by humans. Should an AI be trusted to select job applicants or diagnose illnesses? The question is not just technological—it is moral. Biases coded unknowingly by developers can perpetuate discrimination at scale. Transparency and accountability are therefore crucial. The future of AI will not be determined merely by how powerful systems become but by how wisely humans guide them. Innovation without ethics is like speed without direction. As automation increases efficiency, humanity must ensure empathy does not become obsolete. The challenge before us is not to fear AI but to teach it values we hold sacred—fairness, compassion, and responsibility."
+    id: "EN2",
+    language: "English",
+    text: "Artificial Intelligence, often hailed as the new electricity, is transforming industries and redefining human potential. Yet, behind the glitter of progress lies an ethical labyrinth. Machines are learning faster than laws can adapt, and algorithms are beginning to shape decisions once made by humans. Should an AI be trusted to select job applicants or diagnose illnesses? The question is not just technological—it is moral. Biases coded unknowingly by developers can perpetuate discrimination at scale. Transparency and accountability are therefore crucial. The future of AI will not be determined merely by how powerful systems become but by how wisely humans guide them. Innovation without ethics is like speed without direction. As automation increases efficiency, humanity must ensure empathy does not become obsolete. The challenge before us is not to fear AI but to teach it values we hold sacred—fairness, compassion, and responsibility."
   },
   {
-    "id": "EN3",
-    "language": "English",
-    "text": "Time is perhaps the most democratic force in the universe. It treats the king and the beggar with equal indifference. Every moment that passes carries within it the seeds of both loss and possibility. Philosophers have long debated whether time truly flows or whether it is merely a construct of human consciousness. Whatever the answer, our perception of time defines our experience of life. People chase wealth, fame, and validation, believing time will patiently wait. Yet, the clock never hesitates. The irony is that we spend so much time preparing to live that we forget to live at all. The art of existence lies in embracing the transient. The leaf that falls, the laughter that fades, the sunset that lasts only minutes—all remind us that beauty exists because of impermanence. Time is not a thief; it is a teacher urging us to value the present."
+    id: "EN3",
+    language: "English",
+    text: "Time is perhaps the most democratic force in the universe. It treats the king and the beggar with equal indifference. Every moment that passes carries within it the seeds of both loss and possibility. Philosophers have long debated whether time truly flows or whether it is merely a construct of human consciousness. Whatever the answer, our perception of time defines our experience of life. People chase wealth, fame, and validation, believing time will patiently wait. Yet, the clock never hesitates. The irony is that we spend so much time preparing to live that we forget to live at all. The art of existence lies in embracing the transient. The leaf that falls, the laughter that fades, the sunset that lasts only minutes—all remind us that beauty exists because of impermanence. Time is not a thief; it is a teacher urging us to value the present."
   },
   {
-    "id": "EN4",
-    "language": "English",
-    "text": "Stories are the invisible threads that connect generations. Long before the written word, humans gathered around fires to share tales of courage, betrayal, and love. Literature emerged not as an art form alone but as a record of collective memory. A good story can outlive empires; it can shape cultures and spark revolutions. Shakespeare’s characters still walk among us, disguised in modern conflicts and timeless emotions. In every corner of the world, stories continue to challenge the powerful and comfort the broken. Reading a novel is not escapism; it is an act of empathy. Through stories, we inhabit minds different from our own and learn to understand perspectives we might never live. In an age of fleeting digital content, storytelling remains an anchor reminding humanity that words, when woven with honesty, possess the rare power to heal and transform."
+    id: "EN4",
+    language: "English",
+    text: "Stories are the invisible threads that connect generations. Long before the written word, humans gathered around fires to share tales of courage, betrayal, and love. Literature emerged not as an art form alone but as a record of collective memory. A good story can outlive empires; it can shape cultures and spark revolutions. Shakespeare’s characters still walk among us, disguised in modern conflicts and timeless emotions. In every corner of the world, stories continue to challenge the powerful and comfort the broken. Reading a novel is not escapism; it is an act of empathy. Through stories, we inhabit minds different from our own and learn to understand perspectives we might never live. In an age of fleeting digital content, storytelling remains an anchor reminding humanity that words, when woven with honesty, possess the rare power to heal and transform."
   },
   {
-    "id": "EN5",
-    "language": "English",
-    "text": "Technology promised to connect the world, and in many ways, it succeeded. A message travels across continents in seconds, and a single photo can unite millions in joy or sorrow. Yet, amid this constant connectivity, loneliness has become an epidemic. Conversations have turned into texts, and emotions into emojis. People scroll endlessly, seeking validation in digital applause. The paradox is painful—we are surrounded by connections yet starved of real contact. To reclaim balance, we must treat technology as a tool, not a replacement for presence. Sharing a meal, listening without distraction, and walking under an open sky may seem ordinary, but they nurture the essence of being human. The screen should expand horizons, not confine them. True progress will be measured not by faster downloads but by deeper relationships."
+    id: "EN5",
+    language: "English",
+    text: "Technology promised to connect the world, and in many ways, it succeeded. A message travels across continents in seconds, and a single photo can unite millions in joy or sorrow. Yet, amid this constant connectivity, loneliness has become an epidemic. Conversations have turned into texts, and emotions into emojis. People scroll endlessly, seeking validation in digital applause. The paradox is painful—we are surrounded by connections yet starved of real contact. To reclaim balance, we must treat technology as a tool, not a replacement for presence. Sharing a meal, listening without distraction, and walking under an open sky may seem ordinary, but they nurture the essence of being human. The screen should expand horizons, not confine them. True progress will be measured not by faster downloads but by deeper relationships."
+  },
+
+  // ---------- Hindi Passages ----------
+  {
+    id: "HI1",
+    language: "Hindi",
+    text: "प्रकृति हमारे जीवन की मूल आधारशिला है। मनुष्य चाहे जितनी भी प्रगति कर ले, उसका अस्तित्व धरती, जल और वायु पर ही निर्भर रहेगा। आज का युग औद्योगिकीकरण और उपभोक्तावाद का युग है, जिसमें विकास की दौड़ ने पर्यावरण को हाशिये पर धकेल दिया है। बढ़ता प्रदूषण, घटते वन, और बिगड़ता जलवायु संतुलन हमें बार-बार चेतावनी दे रहे हैं कि प्रकृति से खिलवाड़ अंततः मानवता के लिए ही विनाशकारी सिद्ध होगा। यदि हम समय रहते नहीं चेते, तो आने वाली पीढ़ियाँ न तो शुद्ध वायु पा सकेंगी और न ही स्वच्छ जल। पर्यावरण की रक्षा केवल सरकारों का नहीं, बल्कि हर नागरिक का कर्तव्य है। पेड़ लगाना, प्लास्टिक का सीमित उपयोग, जल का संरक्षण और सार्वजनिक परिवहन का उपयोग जैसे छोटे कदम मिलकर बड़े परिवर्तन ला सकते हैं। याद रखिए, जब तक प्रकृति सुरक्षित है, तब तक मानव सभ्यता सुरक्षित है।"
   },
   {
-    "id": "EN6",
-    "language": "English",
-    "text": "Education was never meant to be a race for grades; it was supposed to be a journey toward understanding. Yet, in many classrooms, curiosity quietly dies beneath the weight of examinations. The real purpose of learning is not to memorize facts but to cultivate the ability to think critically and act wisely. A good teacher does not fill minds with information; they light fires of imagination. Modern education must evolve beyond the traditional boundaries of subjects and syllabi. In a world powered by knowledge, adaptability is more important than accumulation. A student who learns how to learn can never be defeated by change. Technology has brought knowledge to our fingertips, but wisdom still requires reflection. The classroom of the future should not just produce workers; it should nurture creators, dreamers, and problem-solvers who can face uncertainty with confidence. Education must return to its original meaning — not preparation for life, but life itself."
+    id: "HI2",
+    language: "Hindi",
+    text: "कृत्रिम बुद्धिमत्ता अर्थात आर्टिफ़िशियल इंटेलिजेंस आज मानव सभ्यता के नए युग का प्रतीक बन चुकी है। मशीनें अब सोचने, सीखने और निर्णय लेने में सक्षम हो रही हैं। यह विज्ञान की सबसे बड़ी उपलब्धि तो है, परंतु इसके साथ नैतिक प्रश्न भी जुड़ गए हैं। यदि मशीनें निर्णय लेंगी, तो उनमें मानवीय संवेदनाएँ कहाँ रहेंगी? क्या एक रोबोट डॉक्टर इंसान की पीड़ा को समझ सकता है? यदि एल्गोरिद्म में पक्षपात होगा, तो न्याय कैसे होगा? इन प्रश्नों का उत्तर केवल तकनीकी नहीं, बल्कि नैतिक भी है। हमें यह सुनिश्चित करना होगा कि तकनीक का उपयोग मानवता की भलाई के लिए हो, न कि उसके नियंत्रण के लिए।"
   },
   {
-    "id": "EN7",
-    "language": "English",
-    "text": "Economic growth has long been celebrated as a symbol of national progress, yet numbers alone can deceive. When wealth accumulates in a few hands while millions struggle for basic needs, the system loses its moral foundation. The twenty-first century demands not just growth but inclusive growth. A trillion-dollar economy means little if its citizens cannot afford healthcare or education. Governments must therefore balance ambition with compassion. Investment in renewable energy, small enterprises, and rural infrastructure can create jobs that sustain both people and the planet. Technology offers immense promise, but automation must not come at the cost of livelihoods. True prosperity is not when the stock market rises but when every household feels secure. An economy that values equality alongside efficiency becomes not only richer but more humane. The future belongs to societies that measure success not merely by GDP but by dignity."
+    id: "HI3",
+    language: "Hindi",
+    text: "समय वह शक्ति है जो किसी के लिए नहीं रुकती। वह राजा और भिखारी, दोनों को समान रूप से प्रभावित करता है। जीवन का सारा खेल इसी समय के प्रवाह में छिपा हुआ है। जो बीत गया, वह अनुभव बन गया; जो आने वाला है, वह अनिश्चित है। मनुष्य अक्सर भविष्य की चिंता और अतीत के पछतावे में वर्तमान को खो देता है। जबकि सच्ची बुद्धिमत्ता यह है कि हम वर्तमान क्षण को पूर्ण रूप से जी सकें।"
   },
   {
-    "id": "EN8",
-    "language": "English",
-    "text": "From the first spark of fire to the landing on the Moon, humanity’s story has been one of exploration. Space is our newest frontier — vast, silent, and humbling. Each mission launched beyond the Earth’s atmosphere represents not just scientific ambition but also a deep, poetic desire to know who we are. The stars we gaze upon are not unreachable; they are invitations. Yet, the question arises: should we explore space while problems persist on Earth? The answer lies in balance. Space research has given us satellites, weather forecasts, GPS, and countless innovations that serve everyday life. Exploration fuels imagination, and imagination drives progress. It reminds us that boundaries exist only until we cross them. As new telescopes reveal planets orbiting distant suns, one truth becomes clear — we are small, yet our curiosity is infinite. The cosmos is not a distraction from Earth’s troubles; it is a reminder of our shared destiny in the universe."
+    id: "HI4",
+    language: "Hindi",
+    text: "कहानी कहना मानव सभ्यता की सबसे पुरानी परंपराओं में से एक है। जब लिखने का आविष्कार नहीं हुआ था, तब भी लोग आग के चारों ओर बैठकर किस्से सुनाते थे — वीरता के, प्रेम के और संघर्ष के। कहानी केवल मनोरंजन नहीं, बल्कि अनुभवों का संग्रह होती है।"
   },
   {
-    "id": "EN9",
-    "language": "English",
-    "text": "In a world obsessed with speed, stillness has become a luxury. Deadlines, notifications, and endless comparisons have created invisible chains of anxiety. People chase success while losing the ability to rest. Mental health, once ignored, is now emerging as one of the most urgent concerns of modern life. True wellness is not defined by a perfect body or diet but by a calm mind. Mindfulness — the art of being present — offers a simple yet profound solution. Taking a deep breath, walking in silence, or observing thoughts without judgment can heal more than medicine at times. Technology has connected us outwardly but disconnected us inwardly. Rest is not laziness; it is repair. To live fully, we must learn to pause, reflect, and listen to ourselves again. Happiness, after all, is not found in achievement but in awareness."
-  },
-  {
-    "id": "EN10",
-    "language": "English",
-    "text": "Every generation inherits both dreams and dilemmas from the one before it. The youth of today stand at a crossroads where technology, climate, and politics collide. Their challenges are immense, but so is their potential. From leading climate marches to founding startups that redefine innovation, young minds are reshaping society faster than any law or policy. Hope, once a fragile emotion, has now become their strategy. Social media amplifies voices that were once silenced, and ideas travel faster than revolutions. Yet, the youth must remember that real change demands patience, persistence, and empathy. Anger can ignite movements, but understanding sustains them. History shows that progress begins when courage meets compassion. The energy of youth, when guided by wisdom, becomes the strongest force for transformation. The future is not something to be awaited; it is something to be built, word by word, action by action."
-  },
-  {
-    "id": "HI1",
-    "language": "Hindi",
-    "text": "प्रकृति हमारे जीवन की मूल आधारशिला है। मनुष्य चाहे जितनी भी प्रगति कर ले, उसका अस्तित्व धरती, जल और वायु पर ही निर्भर रहेगा। आज का युग औद्योगिकीकरण और उपभोक्तावाद का युग है, जिसमें विकास की दौड़ ने पर्यावरण को हाशिये पर धकेल दिया है। बढ़ता प्रदूषण, घटते वन, और बिगड़ता जलवायु संतुलन हमें बार-बार चेतावनी दे रहे हैं कि प्रकृति से खिलवाड़ अंततः मानवता के लिए ही विनाशकारी सिद्ध होगा। यदि हम समय रहते नहीं चेते, तो आने वाली पीढ़ियाँ न तो शुद्ध वायु पा सकेंगी और न ही स्वच्छ जल। पर्यावरण की रक्षा केवल सरकारों का नहीं, बल्कि हर नागरिक का कर्तव्य है। पेड़ लगाना, प्लास्टिक का सीमित उपयोग, जल का संरक्षण और सार्वजनिक परिवहन का उपयोग जैसे छोटे कदम मिलकर बड़े परिवर्तन ला सकते हैं। याद रखिए, जब तक प्रकृति सुरक्षित है, तब तक मानव सभ्यता सुरक्षित है। प्रकृति का संतुलन ही मानव जीवन की सबसे बड़ी पूँजी है।"
-  },
-  {
-    "id": "HI2",
-    "language": "Hindi",
-    "text": "कृत्रिम बुद्धिमत्ता अर्थात आर्टिफ़िशियल इंटेलिजेंस आज मानव सभ्यता के नए युग का प्रतीक बन चुकी है। मशीनें अब सोचने, सीखने और निर्णय लेने में सक्षम हो रही हैं। यह विज्ञान की सबसे बड़ी उपलब्धि तो है, परंतु इसके साथ नैतिक प्रश्न भी जुड़ गए हैं। यदि मशीनें निर्णय लेंगी, तो उनमें मानवीय संवेदनाएँ कहाँ रहेंगी? क्या एक रोबोट डॉक्टर इंसान की पीड़ा को समझ सकता है? यदि एल्गोरिद्म में पक्षपात होगा, तो न्याय कैसे होगा? इन प्रश्नों का उत्तर केवल तकनीकी नहीं, बल्कि नैतिक भी है। हमें यह सुनिश्चित करना होगा कि तकनीक का उपयोग मानवता की भलाई के लिए हो, न कि उसके नियंत्रण के लिए। कृत्रिम बुद्धिमत्ता का वास्तविक उद्देश्य मनुष्य को प्रतिस्थापित करना नहीं, बल्कि उसकी क्षमताओं को बढ़ाना होना चाहिए। विज्ञान तभी सार्थक है जब वह संवेदना और नैतिकता के साथ जुड़ा हो।"
-  },
-  {
-    "id": "HI3",
-    "language": "Hindi",
-    "text": "समय वह शक्ति है जो किसी के लिए नहीं रुकती। वह राजा और भिखारी, दोनों को समान रूप से प्रभावित करता है। जीवन का सारा खेल इसी समय के प्रवाह में छिपा हुआ है। जो बीत गया, वह अनुभव बन गया; जो आने वाला है, वह अनिश्चित है। मनुष्य अक्सर भविष्य की चिंता और अतीत के पछतावे में वर्तमान को खो देता है। जबकि सच्ची बुद्धिमत्ता यह है कि हम वर्तमान क्षण को पूर्ण रूप से जी सकें। समय का सही उपयोग वही है जब हम प्रत्येक पल में सजग रहें। यह जीवन का सबसे बड़ा रहस्य है कि हर क्षण नया अवसर लेकर आता है। समय हमें सिखाता है कि कुछ भी स्थायी नहीं है — न दुख, न सुख। इसलिए जीवन को पकड़ने की जगह उसे महसूस करना सीखिए। समय का प्रवाह ही जीवन का सच्चा शिक्षक है।"
-  },
-  {
-    "id": "HI4",
-    "language": "Hindi",
-    "text": "कहानी कहना मानव सभ्यता की सबसे पुरानी परंपराओं में से एक है। जब लिखने का आविष्कार नहीं हुआ था, तब भी लोग आग के चारों ओर बैठकर किस्से सुनाते थे — वीरता के, प्रेम के और संघर्ष के। कहानी केवल मनोरंजन नहीं, बल्कि अनुभवों का संग्रह होती है। साहित्य ने हमेशा समाज को दर्पण दिखाया है। प्रेमचंद के उपन्यासों से लेकर महादेवी वर्मा की कविताओं तक, हर लेखक ने समाज की आत्मा को शब्दों में ढाला है। कहानी हमें सोचने पर मजबूर करती है, हमें दूसरों के दुख-सुख से जोड़ती है। आज जब डिजिटल माध्यमों ने पढ़ने की आदत को कमजोर कर दिया है, तब साहित्य पहले से कहीं अधिक आवश्यक हो गया है। कहानी में वह शक्ति है जो पीढ़ियों को जोड़ती है और दिलों को छू जाती है। शब्द अगर सच्चे हों, तो वे पत्थर से भी रास्ता निकाल सकते हैं।"
-  },
-  {
-    "id": "HI5",
-    "language": "Hindi",
-    "text": "तकनीक ने मानव जीवन को आसान बनाया है, लेकिन साथ ही उसने भावनाओं को भी आभासी बना दिया है। अब संवाद स्क्रीन पर होता है, मुस्कान इमोजी में बदल गई है और दोस्ती ‘ऑनलाइन’ स्थिति में सिमट गई है। हम जुड़े हुए हैं, पर फिर भी अलग-थलग हैं। तकनीक का उद्देश्य सुविधा देना है, न कि संवेदना को मिटाना। जब हम किसी से आमने-सामने बात करते हैं, तो आँखों में सच्चाई होती है, आवाज़ में आत्मीयता होती है। यह भाव डिजिटल माध्यम नहीं दे सकता। हमें यह समझना होगा कि तकनीक एक साधन है, जीवन नहीं। रिश्तों की गर्माहट मोबाइल के नेटवर्क से नहीं, दिलों के नेटवर्क से आती है। आधुनिकता तभी सार्थक है जब वह मानवता के साथ संतुलित रहे।"
-  },
-  {
-    "id": "HI6",
-    "language": "Hindi",
-    "text": "शिक्षा का अर्थ केवल डिग्री प्राप्त करना नहीं है। इसका असली उद्देश्य मनुष्य को विवेकवान, संवेदनशील और जिम्मेदार बनाना है। आज के समय में प्रतियोगिता ने शिक्षा को व्यवसाय बना दिया है। विद्यार्थी अंकों के पीछे भाग रहे हैं, ज्ञान के पीछे नहीं। एक सच्चा शिक्षक वह होता है जो प्रश्न पूछना सिखाए, न कि केवल उत्तर रटाए। शिक्षा का वास्तविक मूल्य तब है जब वह मनुष्य में सोचने की क्षमता जगाती है। तकनीक और जानकारी की इस दुनिया में, सबसे बड़ी आवश्यकता है ‘सीखने की कला’। जो सीखना जानता है, वह हर परिवर्तन के साथ आगे बढ़ सकता है। इसलिए शिक्षा को केवल पेशे से नहीं, जीवन से जोड़ना चाहिए। एक शिक्षित समाज ही सच्चे अर्थों में प्रगतिशील समाज बन सकता है।"
-  },
-  {
-    "id": "HI7",
-    "language": "Hindi",
-    "text": "देश की प्रगति का पैमाना केवल आर्थिक वृद्धि नहीं हो सकता। यदि अमीरी और गरीबी की खाई लगातार बढ़ती जा रही है, तो विकास अधूरा है। स्थायी और समान विकास का अर्थ है कि समाज का हर व्यक्ति सम्मानपूर्वक जीवन जी सके। बड़े उद्योग ज़रूरी हैं, पर छोटे व्यवसाय और ग्रामीण उद्यम भी उतने ही महत्वपूर्ण हैं। सरकारें तभी सफल होंगी जब वे विकास के साथ न्याय को भी प्राथमिकता देंगी। हर नागरिक को शिक्षा, स्वास्थ्य और अवसर मिले — यही सच्चा आर्थिक सुधार है। जब तक विकास का लाभ अंतिम व्यक्ति तक नहीं पहुँचता, तब तक अर्थव्यवस्था केवल आँकड़ों में चमकती रहेगी। सच्चा विकास वही है जो मानवता को सशक्त बनाए, न कि केवल बाज़ार को।"
-  },
-  {
-    "id": "HI8",
-    "language": "Hindi",
-    "text": "आकाश की ओर उठी हर नज़र एक प्रश्न पूछती है — क्या हम अकेले हैं? अंतरिक्ष की खोज केवल विज्ञान की उपलब्धि नहीं, बल्कि मानव जिज्ञासा का प्रतीक है। चंद्रमा पर कदम रखना हो या मंगल ग्रह की खोज, हर अभियान में यह संदेश छिपा है कि मानव सीमाओं को तोड़ सकता है। परंतु प्रश्न यह भी है कि जब धरती पर गरीबी और प्रदूषण जैसी समस्याएँ हैं, तो क्या अंतरिक्ष में निवेश उचित है? उत्तर सरल है — ज्ञान की कोई सीमा नहीं होती। अंतरिक्ष अनुसंधान ने हमें उपग्रह, मौसम पूर्वानुमान और संचार की सुविधा दी है। यह हमें सिखाता है कि मानवता का भविष्य केवल पृथ्वी तक सीमित नहीं। जब हम ब्रह्मांड को समझने की कोशिश करते हैं, तब हम अपने अस्तित्व को भी गहराई से समझते हैं।"
-  },
-  {
-    "id": "HI9",
-    "language": "Hindi",
-    "text": "आधुनिक जीवन की तेज़ रफ़्तार ने मनुष्य को मशीन बना दिया है। सुबह से रात तक भागदौड़, प्रतियोगिता और अपेक्षाओं का दबाव मानसिक शांति को छीन रहा है। तनाव अब एक सामान्य शब्द बन गया है, लेकिन इसका प्रभाव गहरा और खतरनाक है। मानसिक स्वास्थ्य को शारीरिक स्वास्थ्य जितना ही महत्व देना आवश्यक है। ध्यान, योग और स्व-चिंतन जैसे साधन हमें भीतर से मजबूत बनाते हैं। मन की शांति बाहरी सुखों से नहीं, भीतर की सजगता से आती है। हमें यह समझना होगा कि विश्राम कोई आलस्य नहीं, बल्कि आत्म-संरक्षण है। जब मन शांत होता है, तो शरीर स्वयं स्वस्थ रहने लगता है। सच्चा स्वास्थ्य वही है जिसमें तन और मन दोनों संतुलित हों।"
-  },
-  {
-    "id": "HI10",
-    "language": "Hindi",
-    "text": "हर युग में परिवर्तन की सबसे बड़ी शक्ति युवा रहे हैं। आज के युवा न केवल तकनीकी रूप से सक्षम हैं, बल्कि सामाजिक रूप से भी सजग हैं। वे अन्याय के खिलाफ आवाज़ उठाते हैं, नवाचार लाते हैं और पुरानी परंपराओं को नए अर्थ देते हैं। सोशल मीडिया ने उन्हें अभिव्यक्ति का मंच दिया है, परंतु यह भी सच है कि गुस्से से नहीं, समझदारी से बदलाव आता है। स्थायी परिवर्तन के लिए धैर्य, संवाद और जिम्मेदारी आवश्यक हैं। यदि युवा अपने विचारों में अनुशासन और करुणा जोड़ दें, तो वे समाज को नई दिशा दे सकते हैं। आने वाला भारत वही होगा जिसे आज का युवा सोचता और बनाता है। युवा ऊर्जा ही वह शक्ति है जो अंधकार में भी उम्मीद की रोशनी जला सकती है।"
+    id: "HI5",
+    language: "Hindi",
+    text: "तकनीक ने मानव जीवन को आसान बनाया है, लेकिन साथ ही उसने भावनाओं को भी आभासी बना दिया है। अब संवाद स्क्रीन पर होता है, मुस्कान इमोजी में बदल गई है और दोस्ती ‘ऑनलाइन’ स्थिति में सिमट गई है। हम जुड़े हुए हैं, पर फिर भी अलग-थलग हैं।"
   }
-]
+];
