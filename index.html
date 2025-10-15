@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function(){
     els.toast.textContent = msg;
     els.toastWrap.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> els.toastWrap.classList.remove('show'), 2000);
+    toastTimer = setTimeout(()=> els.toastWrap.classList.remove('show'), 1600);
   }
 
   /* ===== Helpers ===== */
@@ -304,10 +304,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
   /* ===== Backspace/Delete/Cut: ONLY within last TWO spaces of typed text ===== */
   function allowedBackspaceMinBySpaces(val){
-    var spaces = [];
-    for (var i=0;i<val.length;i++){ if (val[i] === ' ') spaces.push(i); }
+    // Lock everything before the 3rd-from-last literal ' ' spacebar stroke.
+    let spaces = [];
+    for (let i=0;i<val.length;i++){ if (val[i] === ' ') spaces.push(i); }
     if (spaces.length <= 2) return 0;
-    return spaces[spaces.length - 3] + 1; // lock everything before the 3rd-from-last space
+    return spaces[spaces.length - 3] + 1; // locked prefix length
   }
 
   // Snapshots for bullet-proof revert guard
@@ -316,14 +317,17 @@ document.addEventListener('DOMContentLoaded', function(){
   let lastSelEnd = 0;
   function snapshotTextarea(){
     lastVal = els.inputArea.value;
-    lastSelStart = els.inputArea.selectionStart;
-    lastSelEnd   = els.inputArea.selectionEnd;
+    try{
+      lastSelStart = els.inputArea.selectionStart;
+      lastSelEnd   = els.inputArea.selectionEnd;
+    }catch(_){}
   }
 
-  function firstDiffIndex(a,b){
-    const n = Math.min(a.length, b.length);
-    for (let i=0;i<n;i++){ if (a[i] !== b[i]) return i; }
-    return (a.length === b.length) ? -1 : n;
+  // Robust prefix-lock check (safer than first-diff-only)
+  function violatesPrefixLock(prev, next){
+    const minIdx = allowedBackspaceMinBySpaces(prev);     // lock boundary from previous text
+    if (minIdx <= 0) return false;                        // nothing locked yet
+    return next.slice(0, minIdx) !== prev.slice(0, minIdx);
   }
 
   /* ===== Flow ===== */
@@ -486,6 +490,24 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
+  /* ===== Prevent caret from ever living before the boundary ===== */
+  els.inputArea.addEventListener('select', snapCaretIfNeeded);
+  document.addEventListener('selectionchange', function(){
+    if (!started) return;
+    if (document.activeElement === els.inputArea) snapCaretIfNeeded();
+  });
+  function snapCaretIfNeeded(){
+    const val = els.inputArea.value;
+    const minIdx = allowedBackspaceMinBySpaces(val);
+    const s = els.inputArea.selectionStart;
+    const e = els.inputArea.selectionEnd;
+    const leftMost = Math.min(s, e);
+    if (leftMost <= minIdx){
+      const safe = Math.max(minIdx + 1, Math.max(s, e)); // keep selection collapsed just past lock
+      els.inputArea.setSelectionRange(safe, safe);
+    }
+  }
+
   /* ===== Primary: beforeinput blocks ===== */
   els.inputArea.addEventListener('beforeinput', function(e){
     if (!started) return;
@@ -493,33 +515,36 @@ document.addEventListener('DOMContentLoaded', function(){
     // Save snapshot before any change for possible revert
     snapshotTextarea();
 
-    const type = e.inputType;
+    const t = e.inputType;
 
     // Any paste/drop
-    if (type === 'insertFromPaste' || type === 'insertFromDrop'){
+    if (t === 'insertFromPaste' || t === 'insertFromDrop'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
 
-    // Deletions (backspace, delete, cut)
-    if (type === 'deleteContentBackward' || type === 'deleteContentForward' || type === 'deleteByCut'){
+    // Deletions (cover more variants)
+    const deletionTypes = new Set([
+      'deleteContentBackward','deleteContentForward','deleteByCut',
+      'deleteByComposition','historyUndo','deleteByDrag'
+    ]);
+    if (deletionTypes.has(t)){
       const text = e.target.value;
       const selStart = e.target.selectionStart;
       const selEnd   = e.target.selectionEnd;
       const minIdx = allowedBackspaceMinBySpaces(text);
-
       const leftMost = Math.min(selStart, selEnd);
       if (leftMost <= minIdx){ e.preventDefault(); return; }
     }
   });
 
-  /* ===== Fallback: keydown guard ===== */
+  /* ===== Fallback: keydown guard (also blocks cursor moves left/home past boundary) ===== */
   els.inputArea.addEventListener('keydown', function(e){
     if (!started) return;
 
-    // Snapshot before key changes
-    const changeKeys = ['Backspace','Delete','Enter',' '];
-    if (e.key && (e.ctrlKey || e.metaKey || e.shiftKey || changeKeys.includes(e.key))) snapshotTextarea();
+    // Snapshot before potentially destructive keys or moves
+    const changeKeys = ['Backspace','Delete','Enter',' ','ArrowLeft','Home'];
+    if (e.key && changeKeys.includes(e.key)) snapshotTextarea();
 
     // Ctrl/Cmd-anything
     if (e.ctrlKey || e.metaKey){
@@ -532,46 +557,51 @@ document.addEventListener('DOMContentLoaded', function(){
       e.preventDefault(); return;
     }
 
+    const val = els.inputArea.value;
+    const minIdx = allowedBackspaceMinBySpaces(val);
+
     // Prevent space after typed words reach passage word count
     if (e.key === ' '){
       const refCount = passage.split(/\s+/).length;
-      const typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
+      const typedCount = (val.trim().length ? val.trim().split(/\s+/).length : 0);
       if (typedCount >= refCount){ e.preventDefault(); return; }
+    }
+
+    // Stop caret navigation left/home into locked region
+    if (e.key === 'ArrowLeft' || e.key === 'Home'){
+      const s = els.inputArea.selectionStart;
+      const ePos = els.inputArea.selectionEnd;
+      const nextPos = (e.key==='Home') ? 0 : s - 1;
+      if (Math.min(nextPos, ePos) <= minIdx){
+        els.inputArea.setSelectionRange(minIdx + 1, minIdx + 1);
+        e.preventDefault(); return;
+      }
     }
 
     // Backspace/Delete boundary
     if (e.key === 'Backspace' || e.key === 'Delete'){
-      const text  = els.inputArea.value;
-      const start = els.inputArea.selectionStart;
-      const end   = els.inputArea.selectionEnd;
-      const minIdx = allowedBackspaceMinBySpaces(text);
-      const leftMost = Math.min(start, end);
+      const s = els.inputArea.selectionStart;
+      const ePos = els.inputArea.selectionEnd;
+      const leftMost = Math.min(s, ePos);
       if (leftMost <= minIdx){ e.preventDefault(); return; }
     }
   });
 
-  /* ===== Ultimate fallback: input revert ===== */
+  /* ===== Ultimate fallback: input revert using prefix-lock ===== */
   els.inputArea.addEventListener('input', function(){
     if (!started) return;
 
     const newVal = els.inputArea.value;
-    // If length decreased or same-length diff, it could be a deletion
-    const deletionOccurred = (newVal.length < lastVal.length) || (newVal.length === lastVal.length && newVal !== lastVal);
-    if (!deletionOccurred){ highlightProgress(); snapshotTextarea(); return; }
-
-    const minIdx = allowedBackspaceMinBySpaces(lastVal); // boundary based on pre-change
-    const diffAt = firstDiffIndex(lastVal, newVal);
-    if (diffAt === -1){ highlightProgress(); snapshotTextarea(); return; }
-
-    // If earliest change crosses boundary, revert to last safe state
-    if (diffAt <= minIdx){
+    if (violatesPrefixLock(lastVal, newVal)){
+      // revert to last safe value, snap just after lock
       els.inputArea.value = lastVal;
-      const safePos = Math.max(minIdx + 1, lastSelStart);
-      els.inputArea.setSelectionRange(safePos, safePos);
+      const safe = allowedBackspaceMinBySpaces(lastVal) + 1;
+      els.inputArea.setSelectionRange(safe, safe);
       showToast('Backspace limited to last two words');
       return;
     }
 
+    // otherwise accept, and update highlights + snapshot
     highlightProgress();
     snapshotTextarea();
   });
@@ -587,7 +617,15 @@ document.addEventListener('DOMContentLoaded', function(){
   // Buttons
   els.startBtn.addEventListener('click', function(){
     if (els.startBtn.textContent==='Restart'){ resetAll(); return; }
-    startStage();
+    // Show instructions once (English only)
+    if (!instructionsShownOnce && stage === 'EN'){
+      els.instrBody.innerHTML = INSTRUCTIONS_HTML;
+      els.instrBackdrop.classList.add('show');
+      els.instrOk.onclick = ()=>{ els.instrBackdrop.classList.remove('show'); instructionsShownOnce = true; actuallyStartStage(); };
+      els.instrCancel.onclick = ()=>{ els.instrBackdrop.classList.remove('show'); setButtonsRunning(false); };
+    } else {
+      actuallyStartStage();
+    }
   });
   els.submitBtn.addEventListener('click', function(){
     if (intervalId) clearInterval(intervalId); intervalId=null; finishStage();
