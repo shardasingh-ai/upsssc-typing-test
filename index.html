@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UPSSSC Junior Assistant Typing Test (EN ➜ HI)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+
+  :root{
+    --bg:#f3f5f7; --card:#ffffff; --muted:#6b7280; --text:#0f172a;
+    --accent:#22c55e; --accent-700:#16a34a; --danger:#ef4444; --warning:#f59e0b;
+    --ring:0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(2,6,23,.10);
+    --soft:0 1px 2px rgba(2,6,23,.05); --radius:14px;
+    --ok-grey:#e5e7eb; --cur-yellow:#fef08a; --err-red:#fecaca;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font:14px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; color:var(--text); background:var(--bg)}
+  .page{max-width:980px; margin:28px auto; padding:0 16px}
+
+  .hero{background:linear-gradient(135deg,var(--accent) 0%, var(--accent-700) 60%); color:#fff; border-radius:18px; box-shadow:var(--ring); padding:18px 20px 14px}
+  .hero h1{margin:0; font-weight:800}
+  .hero small{font-weight:700; opacity:.95}
+  .badges{display:flex; gap:14px; margin-top:8px; flex-wrap:wrap}
+  .badge{display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.12); padding:6px 10px; border-radius:999px; font-weight:700}
+  .dot{width:6px; height:6px; background:#60a5fa; border-radius:50%}
+
+  .controls{display:flex; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap}
+  .right{margin-left:auto; display:flex; align-items:center; gap:10px}
+  .btn{background:#fff; color:#0b1220; border:1px solid rgba(15,23,42,.08); padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer}
+  .btn[disabled]{opacity:.6; cursor:not-allowed}
+  .btn:hover{background:#f8fafc}
+  #timerEl{background:#fff; color:#0b1220; font-weight:800; padding:10px 14px; border-radius:12px; box-shadow:var(--soft); min-width:84px; text-align:center}
+
+  .section{background:var(--card); border-radius:var(--radius); box-shadow:var(--ring); padding:18px; margin-top:18px}
+  .section h3{margin:0 0 10px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.14em}
+  .scroll{max-height:210px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#fff}
+  .inputbox{min-height:160px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#f8fafc}
+
+  #textDisplay span.ok{background:var(--ok-grey); color:#111827; padding:2px 3px; border-radius:4px}
+  #textDisplay span.err{background:var(--err-red); color:#7f1d1d; text-decoration:underline; text-decoration-color:#b91c1c; padding:2px 3px; border-radius:4px}
+  #textDisplay span.cur{background:var(--cur-yellow); color:#111827; padding:2px 3px; border-radius:4px}
+
+  .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
+  .stat{border:1px solid #e5e7eb; border-radius:14px; padding:14px 16px; background:#fff}
+  .stat small{display:block; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.12em}
+  .value{font-size:20px; font-weight:800; margin-top:6px}
+  .value .u{font-size:11px; color:var(--muted); font-weight:700; margin-left:4px}
+  .final{margin-top:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .pill-fail{background:#fee2e2; color:#991b1b; border:1px solid #fecaca; font-weight:900; letter-spacing:.08em; padding:10px 18px; border-radius:12px}
+  .pill-pass{background:#dcfce7; color:#065f46; border:1px solid #bbf7d0; font-weight:900; letter-spacing:.08em; padding:10px 18px; border-radius:12px}
+  .note{color:var(--muted)}
+  .hidden{display:none}
+
+  /* Toast */
+  #toastWrap{ display:none; margin-top:12px; }
+  #toast{
+    margin:0 auto; max-width:820px; padding:12px 16px; border-radius:10px;
+    background:#fee2e2; color:#7f1d1d; border:1px solid #fecaca;
+    font-weight:800; text-align:center; box-shadow:var(--ring);
+    opacity:0; transition:opacity .25s ease;
+  }
+  #toastWrap.show{ display:block; }
+  #toastWrap.show #toast{ opacity:1; }
+
+  /* Modal (Instruction popup) */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(15,23,42,.55);
+    display:none; align-items:center; justify-content:center; z-index:50;
+  }
+  .modal{background:#fff; width:min(760px,calc(100% - 24px)); border-radius:16px; box-shadow:var(--ring); padding:18px;}
+  .modal h2{margin:0 0 10px; font-size:18px; font-weight:800}
+  .modal .body{max-height:52vh; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; padding:12px; background:#f8fafc; white-space:pre-wrap}
+  .modal .actions{display:flex; justify-content:flex-end; gap:10px; margin-top:12px}
+  .modal .actions .btn-primary{background:var(--accent); color:#fff; border:none}
+  .modal .actions .btn-primary:hover{background:var(--accent-700)}
+  .modal-backdrop.show{display:flex}
+
+  @media (max-width:820px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <h1>UPSSSC <small>Junior Assistant Typing Test</small></h1>
+      <div class="badges">
+        <span class="badge"><span class="dot"></span> English: <strong>30 WPM</strong></span>
+        <span class="badge"><span class="dot"></span> Hindi: <strong>25 WPM</strong></span>
+        <span class="badge"><span class="dot"></span> Duration: <strong>5 + 5 Minutes</strong></span>
+      </div>
+
+      <div class="controls">
+        <div class="left">
+          <span id="stageLabel" style="font-weight:800">Stage: <u>English</u> → Hindi</span>
+          <label id="passageLabel" style="color:#eaf7ee; font-weight:700; margin-left:12px;">Passage:</label>
+          <select id="passageSet" style="margin-right:8px;"></select>
+          <label id="fontLabel" class="hidden" style="color:#eaf7ee; font-weight:700; margin-left:12px;">Hindi Font:</label>
+          <select id="hindiFont" class="hidden">
+            <option value="Noto Sans Devanagari" selected>Noto Sans Devanagari (Default)</option>
+            <option value="Mangal">Mangal (Inscript)</option>
+            <option value="Kruti Dev 010">Kruti Dev 010 (requires system font)</option>
+          </select>
+        </div>
+        <div class="right">
+          <button id="startBtn" class="btn" disabled>Loading…</button>
+          <span id="timerEl">5:00</span>
+          <button id="submitBtn" class="btn hidden">Submit</button>
+          <button id="resetBtn" class="btn">Reset</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Toast -->
+    <div id="toastWrap"><div id="toast">⚠️ CTRL/CMD or Paste not allowed</div></div>
+
+    <!-- Reference Text -->
+    <section class="section">
+      <h3>Reference Text</h3>
+      <div id="textDisplay" class="scroll">Select a passage and click “Start”.</div>
+    </section>
+
+    <!-- Typing Area -->
+    <section class="section">
+      <h3>Your Typing Area</h3>
+      <div class="inputbox" id="inputWrapper">
+        <textarea id="inputArea" placeholder="Start typing here..." disabled
+          autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false"
+          style="width:100%; height:140px; border:none; outline:none; background:transparent; font-size:14px; line-height:1.6;"></textarea>
+      </div>
+      <small class="note">Backspace is limited to edits within the last two spaces of your typed text.</small>
+    </section>
+
+    <!-- Results -->
+    <section class="section">
+      <h3>Test Results</h3>
+      <div id="bothResults" class="hidden">
+        <div class="grid">
+          <div class="stat"><small>EN Gross</small><div id="grossEN" class="value">0.00<span class="u"> WPM</span></div></div>
+          <div class="stat"><small>EN Net</small><div id="netEN" class="value">0.00<span class="u"> WPM</span></div></div>
+          <div class="stat"><small>HI Gross</small><div id="grossHI" class="value">0.00<span class="u"> WPM</span></div></div>
+          <div class="stat"><small>HI Net</small><div id="netHI" class="value">0.00<span class="u"> WPM</span></div></div>
+        </div>
+        <div class="grid" style="margin-top:10px">
+          <div class="stat"><small>EN Errors</small><div class="value"><span id="fullEN">0</span> full, <span id="partialEN">0</span> partial</div></div>
+          <div class="stat"><small>EN Penalty</small><div id="penaltyEN" class="value" style="color:var(--warning)">0<span class="u"> Words</span></div></div>
+          <div class="stat"><small>HI Errors</small><div class="value"><span id="fullHI">0</span> full, <span id="partialHI">0</span> partial</div></div>
+          <div class="stat"><small>HI Penalty</small><div id="penaltyHI" class="value" style="color:var(--warning)">0<span class="u"> Words</span></div></div>
+        </div>
+        <div class="final">
+          <div id="badgeEN" class="pill-fail">EN: FAIL</div>
+          <div id="badgeHI" class="pill-fail">HI: FAIL</div>
+          <div id="badgeOverall" class="pill-fail">OVERALL: FAIL</div>
+          <span class="note">Both languages must meet minimum net WPM.</span>
+        </div>
+      </div>
+      <div id="preResultsNote" class="note">Results appear after each stage and a combined summary at the end.</div>
+    </section>
+  </div>
+
+  <!-- Instruction Modal -->
+  <div id="instrBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="instrTitle">
+    <div class="modal">
+      <h2 id="instrTitle">Instructions</h2>
+      <div id="instrBody" class="body"></div>
+      <div class="actions">
+        <button id="instrCancel" class="btn">Cancel</button>
+        <button id="instrOk" class="btn btn-primary">I Understand</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  /* ===== Elements ===== */
+  const els = {
+    stageLabel: document.getElementById('stageLabel'),
+    textDisplay: document.getElementById('textDisplay'),
+    inputArea:  document.getElementById('inputArea'),
+    startBtn:   document.getElementById('startBtn'),
+    submitBtn:  document.getElementById('submitBtn'),
+    resetBtn:   document.getElementById('resetBtn'),
+    timerEl:    document.getElementById('timerEl'),
+    bothResults:document.getElementById('bothResults'),
+    preResultsNote: document.getElementById('preResultsNote'),
+    grossEN:    document.getElementById('grossEN'),
+    netEN:      document.getElementById('netEN'),
+    penaltyEN:  document.getElementById('penaltyEN'),
+    fullEN:     document.getElementById('fullEN'),
+    partialEN:  document.getElementById('partialEN'),
+    grossHI:    document.getElementById('grossHI'),
+    netHI:      document.getElementById('netHI'),
+    penaltyHI:  document.getElementById('penaltyHI'),
+    fullHI:     document.getElementById('fullHI'),
+    partialHI:  document.getElementById('partialHI'),
+    badgeEN:    document.getElementById('badgeEN'),
+    badgeHI:    document.getElementById('badgeHI'),
+    badgeOverall: document.getElementById('badgeOverall'),
+    hindiFont:  document.getElementById('hindiFont'),
+    fontLabel:  document.getElementById('fontLabel'),
+    passageSet: document.getElementById('passageSet'),
+    toastWrap:  document.getElementById('toastWrap'),
+    toast:      document.getElementById('toast'),
+    instrBackdrop: document.getElementById('instrBackdrop'),
+    instrBody: document.getElementById('instrBody'),
+    instrOk: document.getElementById('instrOk'),
+    instrCancel: document.getElementById('instrCancel'),
+  };
+
+  /* ===== Instruction Text ===== */
+  const INSTRUCTIONS_TEXT =
+`The candidates will be provided with the master text passage of about 1500 key depressions in English.
+The typing can be either word based typing or key strokes based typing.
+For example, 35 w.p.m. is about 10500 key depressions per hour and 30 w.p.m. corresponds to about 9000 key depression per hour.
+The duration of the English typing test is 05:00 minute.
+The countdown timer in the top right corner of the screen will display the remaining time available for you to complete the examination. When the timer reaches zero, the examination will end by itself with typed passage, you are not required to end or submit your test.
+Candidates are not required to repeat the passage, if he/she has completed the passage once and has time in his/her disposal, however they are allowed to revise and correct their mistakes and inaccuracies, if any, during the prescribed time
+After every punctuation mark, only One space is to be inserted, e.g. after comma, full stop, mark of interrogation etc. However, candidates are advised to follow the Question paper scrupulously in this regard.
+The combination of alphanumeric keys followed by one space is termed as one “Word”.
+Once you have completed typing of the given passage and you do not find any errors or mistakes in it, you may submit it by pressing the submit button. After submission no editing or change in the typed passage is possible.
+If your computer is locked/switched off or for any type of technical help, please inform a nearby invigilator immediately.
+In any case of auto restart of the computer, you will be again provided with the full time to type the given passage.
+After typing a given number of words in the master text passage the space bar will not allow further typing of additional words. For example, if there are 500 words in the master text passage, candidates can type only 500 words and after that space bar will not allow the candidates to type any additional word, however, the keyboard will allow the candidate to continue typing without using the space bar.`;
+
+  /* ===== State ===== */
+  let intervalId = null;
+  let timeLeft = 300;     // 5 minutes
+  let started = false;
+  let stage = 'EN';       // 'EN' -> 'HI'
+  let passage = '';
+  let startedAt = null;
+  let results = { EN:null, HI:null };
+
+  // Passages (loaded from passages.json)
+  let passageSets = [];   // [{id,label,english,hindi}]
+  let selectedSetId = null;
+  let englishPassage = "";
+  let hindiPassage   = "";
+
+  /* ===== Toast ===== */
+  let toastTimer = null;
+  function showToast(msg){
+    els.toast.textContent = msg;
+    els.toastWrap.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> els.toastWrap.classList.remove('show'), 2000);
+  }
+
+  /* ===== Helpers ===== */
+  function wordsOf(text){ return text && text.trim().length ? text.trim().split(/\s+/) : []; }
+  function setPassage(text){
+    const words = text.split(/\s+/);
+    els.textDisplay.innerHTML = words.map((w,i)=>`<span data-i="${i}">${w}</span>`).join(' ');
+  }
+  function setFonts(){
+    if (stage === 'HI'){
+      const f = (els.hindiFont.value || 'Noto Sans Devanagari') + ", Inter, system-ui";
+      els.textDisplay.style.fontFamily = f;
+      els.inputArea.style.fontFamily   = f;
+    } else {
+      els.textDisplay.style.fontFamily = 'Inter, system-ui';
+      els.inputArea.style.fontFamily   = 'Inter, system-ui';
+    }
+  }
+  function applySet(id){
+    const set = (passageSets || []).find(s=>s.id===id) || passageSets[0];
+    if (!set) return;
+    selectedSetId = set.id;
+    englishPassage = (set.english||'').trim();
+    hindiPassage   = (set.hindi||'').trim();
+    els.textDisplay.textContent = 'Select “Start” to begin.';
+  }
+  function renderTime(){
+    const m = Math.floor(timeLeft/60), s = String(timeLeft%60).padStart(2,'0');
+    els.timerEl.textContent = m + ":" + s;
+  }
+  function setButtonsRunning(running){
+    els.startBtn.disabled = running;
+    els.resetBtn.disabled = running;
+    els.submitBtn.disabled = !running ? true : false;
+    if (els.passageSet) els.passageSet.disabled = running;
+  }
+  function resetAll(){
+    if (intervalId) { clearInterval(intervalId); intervalId=null; }
+    timeLeft=300; started=false; stage='EN'; results.EN=results.HI=null;
+    els.timerEl.textContent='5:00';
+    els.textDisplay.textContent='Select a passage and click “Start”.';
+    els.inputArea.value=''; els.inputArea.disabled=true; els.submitBtn.classList.add('hidden');
+    els.bothResults.classList.add('hidden'); els.preResultsNote.classList.remove('hidden');
+    els.startBtn.textContent='Start English';
+    els.stageLabel.innerHTML='Stage: <u>English</u> → Hindi';
+    els.fontLabel.classList.add('hidden'); els.hindiFont.classList.add('hidden');
+    setFonts(); setPassage('');
+    setButtonsRunning(false);
+  }
+
+  /* ===== Backspace/Delete/Cut: ONLY within last TWO spaces ===== */
+  function allowedBackspaceMinBySpaces(val){
+    const spaces = [];
+    for (let i=0;i<val.length;i++){ if (val[i]===' ') spaces.push(i); }
+    if (spaces.length <= 2) return 0;
+    return spaces[spaces.length - 3] + 1; // lock everything before the 3rd-from-last space
+  }
+
+  /* ===== Flow ===== */
+  function actuallyStartStage(){
+    // called after instructions accepted
+    started = true; timeLeft=300; startedAt=Date.now(); els.timerEl.textContent='5:00';
+    els.inputArea.value=''; els.inputArea.disabled=false; els.inputArea.focus();
+    els.submitBtn.classList.remove('hidden'); els.preResultsNote.classList.remove('hidden');
+    setButtonsRunning(true);
+
+    if (stage === 'EN'){
+      passage = englishPassage;
+      els.stageLabel.innerHTML='Stage: <b>English</b> → Hindi';
+      els.startBtn.textContent='Running…';
+      els.fontLabel.classList.add('hidden'); els.hindiFont.classList.add('hidden');
+    } else {
+      passage = hindiPassage;
+      els.stageLabel.innerHTML='Stage: English → <b>Hindi</b>';
+      els.startBtn.textContent='Running…';
+      els.fontLabel.classList.remove('hidden'); els.hindiFont.classList.remove('hidden');
+    }
+    setPassage(passage); setFonts(); highlightProgress();
+
+    renderTime();
+    if (intervalId) clearInterval(intervalId);
+    intervalId = setInterval(function(){
+      timeLeft--;
+      renderTime();
+      if (timeLeft <= 0){
+        clearInterval(intervalId); intervalId=null;
+        finishStage();
+      }
+    }, 1000);
+  }
+
+  function openInstructionsAndStart(){
+    // Fill and open modal
+    els.instrBody.textContent = INSTRUCTIONS_TEXT;
+    els.instrBackdrop.classList.add('show');
+
+    const ok = ()=>{ els.instrBackdrop.classList.remove('show'); actuallyStartStage(); };
+    const cancel = ()=>{ els.instrBackdrop.classList.remove('show'); setButtonsRunning(false); };
+
+    const onKey = (e)=>{ if (e.key==='Escape'){ cancel(); } };
+    document.addEventListener('keydown', onKey, { once:true });
+
+    els.instrOk.onclick = ok;
+    els.instrCancel.onclick = cancel;
+  }
+
+  function startStage(){
+    if (started) return;
+    // show modal, and then start
+    setButtonsRunning(true);
+    openInstructionsAndStart();
+  }
+
+  function finishStage(){
+    els.inputArea.disabled=true; els.submitBtn.classList.add('hidden');
+    const stageResult = computeResults(); results[stage]=stageResult;
+    setButtonsRunning(false);
+
+    if (stage==='EN'){
+      let prep=8; els.textDisplay.innerHTML='Hindi starts in <b>'+prep+'</b> seconds… Select font above if needed.';
+      const prepInt=setInterval(function(){
+        prep--; els.textDisplay.innerHTML='Hindi starts in <b>'+prep+'</b> seconds… Select font above if needed.';
+        if(prep<=0){ clearInterval(prepInt); stage='HI'; els.timerEl.textContent='5:00'; els.startBtn.textContent='Start Hindi'; startStage(); }
+      },1000);
+    } else {
+      showCombinedResults(); els.startBtn.textContent='Restart';
+    }
+    started=false;
+  }
+
+  /* ===== Scoring & Highlights ===== */
+  function computeResults(){
+    const elapsedSec = Math.max(1, Math.round((Date.now()-startedAt)/1000));
+    const minutes = elapsedSec/60;
+    const refWords = passage.split(/\s+/);
+    const typedRaw = els.inputArea.value;
+    const typedWords = wordsOf(typedRaw);
+    const spans = els.textDisplay.querySelectorAll('span');
+
+    let full=0, partial=0;
+    for (let n=0;n<spans.length;n++){ spans[n].classList.remove('ok','err','cur'); }
+
+    for (let i=0;i<refWords.length;i++){
+      const span = spans[i];
+      const tw = typedWords[i];
+      if (tw==null){ continue; }
+      if (tw === refWords[i]) span.classList.add('ok');
+      else { span.classList.add('err'); partial++; }
+    }
+    if (typedWords.length < refWords.length){ full = refWords.length - typedWords.length; }
+    if (typedWords.length > refWords.length){ partial += (typedWords.length - refWords.length); }
+
+    const curIndex = Math.max(0, typedWords.length - 1);
+    const curSpan = spans[curIndex]; if (curSpan){ curSpan.classList.add('cur'); curSpan.scrollIntoView({block:'nearest', inline:'nearest'}); }
+
+    const keystrokes = typedRaw.length;
+    const grossWords = keystrokes / 5;        // spec: 5 keystrokes = 1 word (kept only for calculation)
+    const grossWPM = grossWords / minutes;
+
+    const totalErrors = full + partial;
+    const grace = 5;
+    const extraErrors = Math.max(0, totalErrors - grace);
+    const penaltyWords = extraErrors * 5;     // −5 correct words per extra mistake
+    const netWords = Math.max(0, grossWords - penaltyWords);
+    const netWPM = netWords / minutes;
+
+    const minSpeed = stage === 'HI' ? 25 : 30;
+    const passed = netWPM >= minSpeed;
+
+    if (stage==='EN'){
+      els.grossEN.innerHTML=grossWPM.toFixed(2)+'<span class="u"> WPM</span>';
+      els.netEN.innerHTML=netWPM.toFixed(2)+'<span class="u"> WPM</span>';
+      els.fullEN.textContent=full; els.partialEN.textContent=partial;
+      els.penaltyEN.innerHTML=penaltyWords+'<span class="u"> Words</span>';
+      els.badgeEN.className = passed ? 'pill-pass' : 'pill-fail';
+      els.badgeEN.textContent = 'EN: ' + (passed ? 'PASS' : 'FAIL');
+      els.bothResults.classList.remove('hidden'); els.preResultsNote.classList.add('hidden');
+    } else {
+      els.grossHI.innerHTML=grossWPM.toFixed(2)+'<span class="u"> WPM</span>';
+      els.netHI.innerHTML=netWPM.toFixed(2)+'<span class="u"> WPM</span>';
+      els.fullHI.textContent=full; els.partialHI.textContent=partial;
+      els.penaltyHI.innerHTML=penaltyWords+'<span class="u"> Words</span>';
+      els.badgeHI.className = passed ? 'pill-pass' : 'pill-fail';
+      els.badgeHI.textContent = 'HI: ' + (passed ? 'PASS' : 'FAIL');
+      els.bothResults.classList.remove('hidden'); els.preResultsNote.classList.add('hidden');
+    }
+
+    return { grossWPM:grossWPM, netWPM:netWPM, fullErrors:full, partialErrors:partial, penaltyWords:penaltyWords, passed:passed };
+  }
+
+  function showCombinedResults(){
+    const enPass = results.EN && results.EN.passed === true;
+    const hiPass = results.HI && results.HI.passed === true;
+    const overallPass = enPass && hiPass;
+    els.badgeOverall.className = overallPass ? 'pill-pass' : 'pill-fail';
+    els.badgeOverall.textContent = 'OVERALL: ' + (overallPass ? 'PASS' : 'FAIL');
+  }
+
+  function highlightProgress(){
+    const refWords = passage.split(/\s+/);
+    const typedWords = wordsOf(els.inputArea.value);
+    const spans = els.textDisplay.querySelectorAll('span');
+    for (let i=0;i<spans.length;i++){
+      const span = spans[i]; span.classList.remove('ok','err','cur');
+      const tw = typedWords[i]; if (tw==null) continue;
+      if (tw === refWords[i]) span.classList.add('ok'); else span.classList.add('err');
+    }
+    const curIndex = Math.max(0, typedWords.length - 1);
+    const curSpan = spans[curIndex]; if (curSpan){ curSpan.classList.add('cur'); curSpan.scrollIntoView({block:'nearest', inline:'nearest'}); }
+  }
+
+  /* ===== Global key guards ===== */
+  window.addEventListener('keydown', function(e){
+    if (!started) return;
+    if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'r'))){
+      showToast('⚠️ CTRL/CMD or Paste not allowed');
+      e.preventDefault();
+    }
+  });
+
+  // beforeinput guard
+  els.inputArea.addEventListener('beforeinput', function(e){
+    if (!started) return;
+    const type = e.inputType;
+
+    if (type === 'insertFromPaste' || type === 'insertFromDrop'){
+      showToast('⚠️ CTRL/CMD or Paste not allowed');
+      e.preventDefault(); return;
+    }
+    if (type === 'deleteContentBackward' || type === 'deleteContentForward' || type === 'deleteByCut'){
+      const text = e.target.value;
+      const selStart = e.target.selectionStart;
+      const selEnd = e.target.selectionEnd;
+      const minIdx = allowedBackspaceMinBySpaces(text);
+      const leftMost = Math.min(selStart, selEnd);
+      if (leftMost <= minIdx){ e.preventDefault(); return; }
+    }
+  });
+
+  // keydown fallback
+  els.inputArea.addEventListener('keydown', function(e){
+    if (!started) return;
+
+    if (e.ctrlKey || e.metaKey){
+      if (e.key !== 'Control' && e.key !== 'Meta'){ showToast('⚠️ CTRL/CMD or Paste not allowed'); }
+      e.preventDefault(); return;
+    }
+    if (e.shiftKey && e.key === 'Insert'){
+      showToast('⚠️ CTRL/CMD or Paste not allowed');
+      e.preventDefault(); return;
+    }
+    // Prevent space beyond reference word count
+    if (e.key === ' '){
+      const refCount = passage.split(/\s+/).length;
+      const typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
+      if (typedCount >= refCount){ e.preventDefault(); return; }
+    }
+    // Backspace/Delete boundary across selection
+    if (e.key === 'Backspace' || e.key === 'Delete'){
+      const text  = els.inputArea.value;
+      const start = els.inputArea.selectionStart;
+      const end   = els.inputArea.selectionEnd;
+      const minIdx = allowedBackspaceMinBySpaces(text);
+      const leftMost = Math.min(start, end);
+      if (leftMost <= minIdx){ e.preventDefault(); return; }
+    }
+  });
+
+  // Mouse/context paste fallback
+  els.inputArea.addEventListener('paste', function(e){
+    showToast('⚠️ CTRL/CMD or Paste not allowed');
+    e.preventDefault();
+  });
+
+  els.inputArea.addEventListener('input', function(){ if (!started) return; highlightProgress(); });
+
+  // Prevent unload/refresh during test
+  window.addEventListener('beforeunload', function(e){ if (!started) return; e.preventDefault(); e.returnValue=''; });
+
+  // Buttons
+  els.startBtn.addEventListener('click', function(){
+    if (els.startBtn.textContent==='Restart'){ resetAll(); return; }
+    startStage();
+  });
+  els.submitBtn.addEventListener('click', function(){
+    if (intervalId) clearInterval(intervalId); intervalId=null; finishStage();
+  });
+  els.resetBtn.addEventListener('click', resetAll);
+  els.hindiFont.addEventListener('change', setFonts);
+  els.passageSet.addEventListener('change', function(){ if (started) return; applySet(els.passageSet.value); });
+
+  /* ===== Load passages.json (clean + robust) ===== */
+  async function loadPassages(){
+    try{
+      const res = await fetch('./passages.json', { cache: 'no-store' });
+      if(!res.ok) throw new Error('Failed to load passages.json');
+      const data = await res.json();
+
+      let sets = [];
+      if (Array.isArray(data.sets)) {
+        sets = data.sets.filter(s => s && s.english && s.hindi);
+      } else if (data.english && data.hindi) {
+        sets = [{ id: data.id || 'default', label: data.label || 'Default', english: data.english, hindi: data.hindi }];
+      } else {
+        throw new Error('Invalid passages.json format');
+      }
+      if (!sets.length) throw new Error('No complete EN/HI pairs found');
+
+      passageSets = sets.map((s, i) => Object.assign({ id: s.id || ('set-'+i), label: s.label || ('Set '+(i+1)) }, s));
+      els.passageSet.innerHTML = passageSets.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+      els.passageSet.value = passageSets[0].id;
+      applySet(passageSets[0].id);
+
+      // enable Start
+      els.startBtn.disabled = false;
+      els.startBtn.textContent = 'Start English';
+    }catch(e){
+      console.error(e);
+      // Fallback: Single built-in set so the app is still usable
+      passageSets = [{
+        id:'default', label:'Default',
+        english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
+        hindi:"उत्तर प्रदेश अधीनस्थ सेवा चयन आयोग द्वारा आयोजित टाइपिंग परीक्षा का उद्देश्य अभ्यर्थियों की गति के साथ-साथ शुद्धता का मूल्यांकन करना है। पाँच मिनट की समयावधि में दिए गए अनुच्छेद को हूबहू टाइप करना होता है। ध्यान रखें कि शब्द, विराम-चिह्न और बड़े-छोटे अक्षरों में त्रुटि न हो। स्थिर गति और लय के साथ अभ्यास करने से सकल गति तथा शुद्ध टाइपिंग गति में लगातार सुधार आता है। अभ्यर्थियों को सही कीबोर्ड लेआउट का प्रयोग करते हुए स्क्रीन पर ध्यान केंद्रित रखना चाहिए।"
+      }];
+      els.passageSet.innerHTML = '<option value="default">Default</option>';
+      els.passageSet.value = 'default';
+      applySet('default');
+      els.startBtn.disabled = false;
+      els.startBtn.textContent = 'Start English';
+      showToast('⚠️ passages.json not found/invalid — using built-in default.');
+    }
+  }
+
+  // Init
+  resetAll();
+  loadPassages();
+});
+</script>
+</body>
+</html>
