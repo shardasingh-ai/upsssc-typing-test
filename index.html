@@ -14,7 +14,7 @@
     --accent:#22c55e; --accent-700:#16a34a; --danger:#ef4444; --warning:#f59e0b;
     --ring:0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(2,6,23,.10);
     --soft:0 1px 2px rgba(2,6,23,.05); --radius:14px;
-    --ok-grey:#e5e7eb; --cur-yellow:#fef08a; --err-red:#b91c1c;
+    --cur-yellow:#fef08a; --err-red:#b91c1c;
   }
   *{box-sizing:border-box}
   body{margin:0; font:14px/1.6 Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; color:var(--text); background:var(--bg)}
@@ -40,8 +40,8 @@
   .inputbox{min-height:160px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#f8fafc}
 
   /* Visuals during typing */
-  #textDisplay span.ok{background:var(--ok-grey); color:#111827; padding:2px 3px; border-radius:4px}
-  #textDisplay span.err{color:var(--err-red);}          /* red text only, no highlight/underline */
+  /* No "ok" style (we don't add the class anymore) */
+  #textDisplay span.err{color:var(--err-red);}      /* red text only */
   #textDisplay span.cur{background:var(--cur-yellow); color:#111827; padding:2px 3px; border-radius:4px}
 
   .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
@@ -73,7 +73,9 @@
   }
   .modal{background:#fff; width:min(760px,calc(100% - 24px)); border-radius:16px; box-shadow:var(--ring); padding:18px;}
   .modal h2{margin:0 0 10px; font-size:18px; font-weight:800}
-  .modal .body{max-height:52vh; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; padding:12px; background:#f8fafc; white-space:pre-wrap}
+  .modal .body{max-height:52vh; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; padding:12px; background:#f8fafc;}
+  .modal .body ol{margin:0; padding-left:20px;}
+  .modal .body li{margin:6px 0;}
   .modal .actions{display:flex; justify-content:flex-end; gap:10px; margin-top:12px}
   .modal .actions .btn-primary{background:var(--accent); color:#fff; border:none}
   .modal .actions .btn-primary:hover{background:var(--accent-700)}
@@ -209,20 +211,22 @@ document.addEventListener('DOMContentLoaded', function(){
     instrCancel: document.getElementById('instrCancel'),
   };
 
-  /* ===== Instruction Text ===== */
-  const INSTRUCTIONS_TEXT =
-`The candidates will be provided with the master text passage of about 1500 key depressions in English.
-The typing can be either word based typing or key strokes based typing.
-For example, 35 w.p.m. is about 10500 key depressions per hour and 30 w.p.m. corresponds to about 9000 key depression per hour.
-The duration of the English typing test is 05:00 minute.
-The countdown timer in the top right corner of the screen will display the remaining time available for you to complete the examination. When the timer reaches zero, the examination will end by itself with typed passage, you are not required to end or submit your test.
-Candidates are not required to repeat the passage, if he/she has completed the passage once and has time in his/her disposal, however they are allowed to revise and correct their mistakes and inaccuracies, if any, during the prescribed time
-After every punctuation mark, only One space is to be inserted, e.g. after comma, full stop, mark of interrogation etc. However, candidates are advised to follow the Question paper scrupulously in this regard.
-The combination of alphanumeric keys followed by one space is termed as one “Word”.
-Once you have completed typing of the given passage and you do not find any errors or mistakes in it, you may submit it by pressing the submit button. After submission no editing or change in the typed passage is possible.
-If your computer is locked/switched off or for any type of technical help, please inform a nearby invigilator immediately.
-In any case of auto restart of the computer, you will be again provided with the full time to type the given passage.
-After typing a given number of words in the master text passage the space bar will not allow further typing of additional words. For example, if there are 500 words in the master text passage, candidates can type only 500 words and after that space bar will not allow the candidates to type any additional word, however, the keyboard will allow the candidate to continue typing without using the space bar.`;
+  /* ===== Instruction HTML (numbered list) ===== */
+  const INSTRUCTIONS_HTML = `
+    <ol>
+      <li>The candidates will be provided with the master text passage of about 1500 key depressions in English.</li>
+      <li>The typing can be either word based typing or key strokes based typing.</li>
+      <li>For example, 35 w.p.m. is about 10500 key depressions per hour and 30 w.p.m. corresponds to about 9000 key depression per hour.</li>
+      <li>The duration of the English typing test is 05:00 minute.</li>
+      <li>The countdown timer in the top right corner of the screen will display the remaining time. When the timer reaches zero, the examination will end by itself; you are not required to submit.</li>
+      <li>Repeating the passage is not required. If time remains, you may revise and correct mistakes during the prescribed time.</li>
+      <li>After every punctuation mark, only one space is to be inserted (comma, full stop, question mark, etc.). Follow the question paper precisely.</li>
+      <li>The combination of alphanumeric keys followed by one space is termed as one “Word”.</li>
+      <li>Once satisfied, you may submit using the Submit button. After submission, editing is not possible.</li>
+      <li>If your computer is locked/switched off or you need help, inform an invigilator immediately.</li>
+      <li>In case of auto-restart, you will be provided the full time again to type the given passage.</li>
+      <li>After typing the given number of words in the master text, the space bar will not allow additional words. You can still type characters without using space.</li>
+    </ol>`;
 
   /* ===== State ===== */
   let intervalId = null;
@@ -233,9 +237,11 @@ After typing a given number of words in the master text passage the space bar wi
   let startedAt = null;
   let results = { EN:null, HI:null };
 
+  // Show instructions only once
+  let instructionsShownOnce = false;
+
   // Passages (loaded from passages.json)
   let passageSets = [];   // [{id,label,english,hindi}]
-  let selectedSetId = null;
   let englishPassage = "";
   let hindiPassage   = "";
 
@@ -267,7 +273,6 @@ After typing a given number of words in the master text passage the space bar wi
   function applySet(id){
     const set = (passageSets || []).find(s=>s.id===id) || passageSets[0];
     if (!set) return;
-    selectedSetId = set.id;
     englishPassage = (set.english||'').trim();
     hindiPassage   = (set.hindi||'').trim();
     els.textDisplay.textContent = 'Select “Start” to begin.';
@@ -306,7 +311,6 @@ After typing a given number of words in the master text passage the space bar wi
 
   /* ===== Flow ===== */
   function actuallyStartStage(){
-    // called after instructions accepted
     started = true; timeLeft=300; startedAt=Date.now(); els.timerEl.textContent='5:00';
     els.inputArea.value=''; els.inputArea.disabled=false; els.inputArea.focus();
     els.submitBtn.classList.remove('hidden'); els.preResultsNote.classList.remove('hidden');
@@ -338,10 +342,10 @@ After typing a given number of words in the master text passage the space bar wi
   }
 
   function openInstructionsAndStart(){
-    els.instrBody.textContent = INSTRUCTIONS_TEXT;
+    els.instrBody.innerHTML = INSTRUCTIONS_HTML;
     els.instrBackdrop.classList.add('show');
 
-    const ok = ()=>{ els.instrBackdrop.classList.remove('show'); actuallyStartStage(); };
+    const ok = ()=>{ els.instrBackdrop.classList.remove('show'); instructionsShownOnce = true; actuallyStartStage(); };
     const cancel = ()=>{ els.instrBackdrop.classList.remove('show'); setButtonsRunning(false); };
 
     const onKey = (e)=>{ if (e.key==='Escape'){ cancel(); } };
@@ -354,7 +358,9 @@ After typing a given number of words in the master text passage the space bar wi
   function startStage(){
     if (started) return;
     setButtonsRunning(true);
-    openInstructionsAndStart();
+    // Show popup only once (English stage). For Hindi, start directly.
+    if (!instructionsShownOnce && stage === 'EN'){ openInstructionsAndStart(); }
+    else { actuallyStartStage(); }
   }
 
   function finishStage(){
@@ -374,7 +380,7 @@ After typing a given number of words in the master text passage the space bar wi
     started=false;
   }
 
-  /* ===== Scoring & Highlights ===== */
+  /* ===== Scoring & Highlights (no "ok" class now) ===== */
   function computeResults(){
     const elapsedSec = Math.max(1, Math.round((Date.now()-startedAt)/1000));
     const minutes = elapsedSec/60;
@@ -384,14 +390,13 @@ After typing a given number of words in the master text passage the space bar wi
     const spans = els.textDisplay.querySelectorAll('span');
 
     let full=0, partial=0;
-    for (let n=0;n<spans.length;n++){ spans[n].classList.remove('ok','err','cur'); }
+    for (let n=0;n<spans.length;n++){ spans[n].classList.remove('err','cur'); }
 
     for (let i=0;i<refWords.length;i++){
       const span = spans[i];
       const tw = typedWords[i];
       if (tw==null){ continue; }
-      if (tw === refWords[i]) span.classList.add('ok');
-      else { span.classList.add('err'); partial++; }
+      if (tw !== refWords[i]) { span.classList.add('err'); partial++; }
     }
     if (typedWords.length < refWords.length){ full = refWords.length - typedWords.length; }
     if (typedWords.length > refWords.length){ partial += (typedWords.length - refWords.length); }
@@ -400,7 +405,7 @@ After typing a given number of words in the master text passage the space bar wi
     const curSpan = spans[curIndex]; if (curSpan){ curSpan.classList.add('cur'); curSpan.scrollIntoView({block:'nearest', inline:'nearest'}); }
 
     const keystrokes = typedRaw.length;
-    const grossWords = keystrokes / 5;        // calc only
+    const grossWords = keystrokes / 5;
     const grossWPM = grossWords / minutes;
 
     const totalErrors = full + partial;
@@ -447,9 +452,9 @@ After typing a given number of words in the master text passage the space bar wi
     const typedWords = wordsOf(els.inputArea.value);
     const spans = els.textDisplay.querySelectorAll('span');
     for (let i=0;i<spans.length;i++){
-      const span = spans[i]; span.classList.remove('ok','err','cur');
+      const span = spans[i]; span.classList.remove('err','cur');
       const tw = typedWords[i]; if (tw==null) continue;
-      if (tw === refWords[i]) span.classList.add('ok'); else span.classList.add('err');
+      if (tw !== refWords[i]) span.classList.add('err');
     }
     const curIndex = Math.max(0, typedWords.length - 1);
     const curSpan = spans[curIndex]; if (curSpan){ curSpan.classList.add('cur'); curSpan.scrollIntoView({block:'nearest', inline:'nearest'}); }
@@ -464,18 +469,15 @@ After typing a given number of words in the master text passage the space bar wi
     }
   });
 
-  // beforeinput guard — now handles all delete types
+  // beforeinput guard — handles all delete types
   els.inputArea.addEventListener('beforeinput', function(e){
     if (!started) return;
     const type = e.inputType;
 
-    // Block paste/drop
     if (type === 'insertFromPaste' || type === 'insertFromDrop'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
-
-    // Block ANY deletion beyond boundary (covers deleteWordBackward/Forward, etc.)
     if (type.startsWith('delete')){
       const text = e.target.value;
       const selStart = e.target.selectionStart;
@@ -538,10 +540,9 @@ After typing a given number of words in the master text passage the space bar wi
   els.hindiFont.addEventListener('change', setFonts);
   els.passageSet.addEventListener('change', function(){ if (started) return; applySet(els.passageSet.value); });
 
-  /* ===== Load passages.json (robust) ===== */
+  /* ===== Load passages.json ===== */
   async function loadPassages(){
     try{
-      // Cache-buster avoids stale JSON on GitHub Pages
       const res = await fetch('./passages.json?ts=' + Date.now(), { cache: 'no-store' });
       if(!res.ok) throw new Error('Failed to load passages.json: HTTP ' + res.status);
       const data = await res.json();
