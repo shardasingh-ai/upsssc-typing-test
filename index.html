@@ -240,7 +240,6 @@ document.addEventListener('DOMContentLoaded', function(){
   let results = { EN:null, HI:null };
   let instructionsShownOnce = false;
 
-  // passages
   let passageSets = [];
   let englishPassage = "";
   let hindiPassage   = "";
@@ -299,19 +298,19 @@ document.addEventListener('DOMContentLoaded', function(){
     els.fontLabel.classList.add('hidden'); els.hindiFont.classList.add('hidden');
     setFonts(); setPassage('');
     setButtonsRunning(false);
-    snapshotTextarea(); // prepare guards
+    snapshotTextarea();
   }
 
   /* ===== Backspace/Delete/Cut: ONLY within last TWO spaces of typed text ===== */
+  // IMPORTANT FIX: return -1 when there is NO lock yet (<=2 spaces)
   function allowedBackspaceMinBySpaces(val){
-    // Lock everything before the 3rd-from-last literal ' ' spacebar stroke.
     let spaces = [];
     for (let i=0;i<val.length;i++){ if (val[i] === ' ') spaces.push(i); }
-    if (spaces.length <= 2) return 0;
-    return spaces[spaces.length - 3] + 1; // locked prefix length
+    if (spaces.length <= 2) return -1;           // NO lock yet
+    return spaces[spaces.length - 3] + 1;        // lock prefix length (index after 3rd-from-last space)
   }
 
-  // Snapshots for bullet-proof revert guard
+  // Snapshots for revert guard
   let lastVal = '';
   let lastSelStart = 0;
   let lastSelEnd = 0;
@@ -323,10 +322,10 @@ document.addEventListener('DOMContentLoaded', function(){
     }catch(_){}
   }
 
-  // Robust prefix-lock check (safer than first-diff-only)
+  // Prefix-lock violation check
   function violatesPrefixLock(prev, next){
-    const minIdx = allowedBackspaceMinBySpaces(prev);     // lock boundary from previous text
-    if (minIdx <= 0) return false;                        // nothing locked yet
+    const minIdx = allowedBackspaceMinBySpaces(prev);
+    if (minIdx < 0) return false; // no lock yet
     return next.slice(0, minIdx) !== prev.slice(0, minIdx);
   }
 
@@ -490,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  /* ===== Prevent caret from ever living before the boundary ===== */
+  /* ===== Keep caret out of locked region ===== */
   els.inputArea.addEventListener('select', snapCaretIfNeeded);
   document.addEventListener('selectionchange', function(){
     if (!started) return;
@@ -499,31 +498,28 @@ document.addEventListener('DOMContentLoaded', function(){
   function snapCaretIfNeeded(){
     const val = els.inputArea.value;
     const minIdx = allowedBackspaceMinBySpaces(val);
+    if (minIdx < 0) return; // no lock
     const s = els.inputArea.selectionStart;
     const e = els.inputArea.selectionEnd;
     const leftMost = Math.min(s, e);
     if (leftMost <= minIdx){
-      const safe = Math.max(minIdx + 1, Math.max(s, e)); // keep selection collapsed just past lock
+      const safe = Math.max(minIdx + 1, Math.max(s, e));
       els.inputArea.setSelectionRange(safe, safe);
     }
   }
 
-  /* ===== Primary: beforeinput blocks ===== */
+  /* ===== Primary: beforeinput ===== */
   els.inputArea.addEventListener('beforeinput', function(e){
     if (!started) return;
-
-    // Save snapshot before any change for possible revert
     snapshotTextarea();
 
     const t = e.inputType;
 
-    // Any paste/drop
     if (t === 'insertFromPaste' || t === 'insertFromDrop'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
 
-    // Deletions (cover more variants)
     const deletionTypes = new Set([
       'deleteContentBackward','deleteContentForward','deleteByCut',
       'deleteByComposition','historyUndo','deleteByDrag'
@@ -533,25 +529,24 @@ document.addEventListener('DOMContentLoaded', function(){
       const selStart = e.target.selectionStart;
       const selEnd   = e.target.selectionEnd;
       const minIdx = allowedBackspaceMinBySpaces(text);
-      const leftMost = Math.min(selStart, selEnd);
-      if (leftMost <= minIdx){ e.preventDefault(); return; }
+      if (minIdx >= 0){
+        const leftMost = Math.min(selStart, selEnd);
+        if (leftMost <= minIdx){ e.preventDefault(); return; }
+      }
     }
   });
 
-  /* ===== Fallback: keydown guard (also blocks cursor moves left/home past boundary) ===== */
+  /* ===== Keydown fallback ===== */
   els.inputArea.addEventListener('keydown', function(e){
     if (!started) return;
 
-    // Snapshot before potentially destructive keys or moves
     const changeKeys = ['Backspace','Delete','Enter',' ','ArrowLeft','Home'];
     if (e.key && changeKeys.includes(e.key)) snapshotTextarea();
 
-    // Ctrl/Cmd-anything
     if (e.ctrlKey || e.metaKey){
       if (e.key !== 'Control' && e.key !== 'Meta'){ showToast('⚠️ CTRL/CMD or Paste not allowed'); }
       e.preventDefault(); return;
     }
-    // Shift+Insert paste
     if (e.shiftKey && e.key === 'Insert'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
@@ -560,53 +555,50 @@ document.addEventListener('DOMContentLoaded', function(){
     const val = els.inputArea.value;
     const minIdx = allowedBackspaceMinBySpaces(val);
 
-    // Prevent space after typed words reach passage word count
     if (e.key === ' '){
       const refCount = passage.split(/\s+/).length;
       const typedCount = (val.trim().length ? val.trim().split(/\s+/).length : 0);
       if (typedCount >= refCount){ e.preventDefault(); return; }
     }
 
-    // Stop caret navigation left/home into locked region
-    if (e.key === 'ArrowLeft' || e.key === 'Home'){
-      const s = els.inputArea.selectionStart;
-      const ePos = els.inputArea.selectionEnd;
-      const nextPos = (e.key==='Home') ? 0 : s - 1;
-      if (Math.min(nextPos, ePos) <= minIdx){
-        els.inputArea.setSelectionRange(minIdx + 1, minIdx + 1);
-        e.preventDefault(); return;
+    if (minIdx >= 0){
+      if (e.key === 'ArrowLeft' || e.key === 'Home'){
+        const s = els.inputArea.selectionStart;
+        const ePos = els.inputArea.selectionEnd;
+        const nextPos = (e.key==='Home') ? 0 : s - 1;
+        if (Math.min(nextPos, ePos) <= minIdx){
+          els.inputArea.setSelectionRange(minIdx + 1, minIdx + 1);
+          e.preventDefault(); return;
+        }
       }
-    }
 
-    // Backspace/Delete boundary
-    if (e.key === 'Backspace' || e.key === 'Delete'){
-      const s = els.inputArea.selectionStart;
-      const ePos = els.inputArea.selectionEnd;
-      const leftMost = Math.min(s, ePos);
-      if (leftMost <= minIdx){ e.preventDefault(); return; }
+      if (e.key === 'Backspace' || e.key === 'Delete'){
+        const s = els.inputArea.selectionStart;
+        const ePos = els.inputArea.selectionEnd;
+        const leftMost = Math.min(s, ePos);
+        if (leftMost <= minIdx){ e.preventDefault(); return; }
+      }
     }
   });
 
-  /* ===== Ultimate fallback: input revert using prefix-lock ===== */
+  /* ===== Ultimate fallback: input revert ===== */
   els.inputArea.addEventListener('input', function(){
     if (!started) return;
 
     const newVal = els.inputArea.value;
     if (violatesPrefixLock(lastVal, newVal)){
-      // revert to last safe value, snap just after lock
       els.inputArea.value = lastVal;
-      const safe = allowedBackspaceMinBySpaces(lastVal) + 1;
+      const safe = Math.max(allowedBackspaceMinBySpaces(lastVal) + 1, 0);
       els.inputArea.setSelectionRange(safe, safe);
       showToast('Backspace limited to last two words');
       return;
     }
 
-    // otherwise accept, and update highlights + snapshot
     highlightProgress();
     snapshotTextarea();
   });
 
-  // Block paste via context menu as well
+  // Block paste via context menu
   els.inputArea.addEventListener('paste', function(e){
     showToast('⚠️ CTRL/CMD or Paste not allowed');
     e.preventDefault();
@@ -617,7 +609,6 @@ document.addEventListener('DOMContentLoaded', function(){
   // Buttons
   els.startBtn.addEventListener('click', function(){
     if (els.startBtn.textContent==='Restart'){ resetAll(); return; }
-    // Show instructions once (English only)
     if (!instructionsShownOnce && stage === 'EN'){
       els.instrBody.innerHTML = INSTRUCTIONS_HTML;
       els.instrBackdrop.classList.add('show');
