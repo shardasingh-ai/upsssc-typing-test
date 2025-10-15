@@ -5,9 +5,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>UPSSSC Junior Assistant Typing Test (EN ➜ HI)</title>
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
 
   :root{
     --bg:#f3f5f7; --card:#ffffff; --muted:#6b7280; --text:#0f172a;
@@ -97,15 +97,17 @@
       <div class="controls">
         <div class="left">
           <span id="stageLabel" style="font-weight:800">Stage: <u>English</u> → Hindi</span>
+
           <label id="passageLabel" style="color:#eaf7ee; font-weight:700; margin-left:12px;">Passage:</label>
           <select id="passageSet" style="margin-right:8px;"></select>
+
           <label id="fontLabel" class="hidden" style="color:#eaf7ee; font-weight:700; margin-left:12px;">Hindi Font:</label>
           <select id="hindiFont" class="hidden">
-            <option value="Noto Sans Devanagari" selected>Noto Sans Devanagari (Default)</option>
-            <option value="Mangal">Mangal (Inscript)</option>
-            <option value="Kruti Dev 010">Kruti Dev 010 (requires system font)</option>
+            <option value="Mangal" selected>Mangal (Inscript)</option>
+            <option value="Kruti Dev 010">Kruti Dev 010</option>
           </select>
         </div>
+
         <div class="right">
           <button id="startBtn" class="btn" disabled>Loading…</button>
           <span id="timerEl">5:00</span>
@@ -200,9 +202,9 @@ document.addEventListener('DOMContentLoaded', function(){
     badgeEN:    document.getElementById('badgeEN'),
     badgeHI:    document.getElementById('badgeHI'),
     badgeOverall: document.getElementById('badgeOverall'),
+    passageSet: document.getElementById('passageSet'),
     hindiFont:  document.getElementById('hindiFont'),
     fontLabel:  document.getElementById('fontLabel'),
-    passageSet: document.getElementById('passageSet'),
     toastWrap:  document.getElementById('toastWrap'),
     toast:      document.getElementById('toast'),
     instrBackdrop: document.getElementById('instrBackdrop'),
@@ -230,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
   /* ===== State ===== */
   let intervalId = null;
-  let timeLeft = 300;     // 5 minutes
+  let timeLeft = 300;
   let started = false;
   let stage = 'EN';       // 'EN' -> 'HI'
   let passage = '';
@@ -238,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function(){
   let results = { EN:null, HI:null };
   let instructionsShownOnce = false;
 
-  // Passages (loaded from passages.json)
+  // passages
   let passageSets = [];
   let englishPassage = "";
   let hindiPassage   = "";
@@ -260,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function setFonts(){
     if (stage === 'HI'){
-      const f = (els.hindiFont.value || 'Noto Sans Devanagari') + ", Inter, system-ui";
+      const f = (els.hindiFont.value || 'Mangal') + ", Inter, system-ui";
       els.textDisplay.style.fontFamily = f;
       els.inputArea.style.fontFamily   = f;
     } else {
@@ -297,15 +299,31 @@ document.addEventListener('DOMContentLoaded', function(){
     els.fontLabel.classList.add('hidden'); els.hindiFont.classList.add('hidden');
     setFonts(); setPassage('');
     setButtonsRunning(false);
+    snapshotTextarea(); // prepare guards
   }
 
   /* ===== Backspace/Delete/Cut: ONLY within last TWO spaces of typed text ===== */
   function allowedBackspaceMinBySpaces(val){
-    // indices of literal spaces typed via spacebar
     var spaces = [];
     for (var i=0;i<val.length;i++){ if (val[i] === ' ') spaces.push(i); }
-    if (spaces.length <= 2) return 0;                 // if <=2 spaces typed, allow from start
-    return spaces[spaces.length - 3] + 1;             // lock everything before the 3rd-from-last space
+    if (spaces.length <= 2) return 0;
+    return spaces[spaces.length - 3] + 1; // lock everything before the 3rd-from-last space
+  }
+
+  // Snapshots for bullet-proof revert guard
+  let lastVal = '';
+  let lastSelStart = 0;
+  let lastSelEnd = 0;
+  function snapshotTextarea(){
+    lastVal = els.inputArea.value;
+    lastSelStart = els.inputArea.selectionStart;
+    lastSelEnd   = els.inputArea.selectionEnd;
+  }
+
+  function firstDiffIndex(a,b){
+    const n = Math.min(a.length, b.length);
+    for (let i=0;i<n;i++){ if (a[i] !== b[i]) return i; }
+    return (a.length === b.length) ? -1 : n;
   }
 
   /* ===== Flow ===== */
@@ -327,6 +345,7 @@ document.addEventListener('DOMContentLoaded', function(){
       els.fontLabel.classList.remove('hidden'); els.hindiFont.classList.remove('hidden');
     }
     setPassage(passage); setFonts(); highlightProgress();
+    snapshotTextarea();
 
     renderTime();
     if (intervalId) clearInterval(intervalId);
@@ -394,8 +413,8 @@ document.addEventListener('DOMContentLoaded', function(){
       const span = spans[i];
       const tw = typedWords[i];
       if (tw==null){ continue; }
-      if (tw === refWords[i]) span.classList.add('ok');   // correct -> grey text
-      else { span.classList.add('err'); partial++; }      // wrong   -> red text
+      if (tw === refWords[i]) span.classList.add('ok');   // grey text
+      else { span.classList.add('err'); partial++; }      // red text
     }
     if (typedWords.length < refWords.length){ full = refWords.length - typedWords.length; }
     if (typedWords.length > refWords.length){ partial += (typedWords.length - refWords.length); }
@@ -467,10 +486,14 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  /* ===== BEFOREINPUT: block paste & deletion across boundary (YOUR CODE) ===== */
+  /* ===== Primary: beforeinput blocks ===== */
   els.inputArea.addEventListener('beforeinput', function(e){
     if (!started) return;
-    var type = e.inputType;
+
+    // Save snapshot before any change for possible revert
+    snapshotTextarea();
+
+    const type = e.inputType;
 
     // Any paste/drop
     if (type === 'insertFromPaste' || type === 'insertFromDrop'){
@@ -480,20 +503,23 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // Deletions (backspace, delete, cut)
     if (type === 'deleteContentBackward' || type === 'deleteContentForward' || type === 'deleteByCut'){
-      var text = e.target.value;
-      var selStart = e.target.selectionStart;
-      var selEnd   = e.target.selectionEnd;
-      var minIdx = allowedBackspaceMinBySpaces(text);
+      const text = e.target.value;
+      const selStart = e.target.selectionStart;
+      const selEnd   = e.target.selectionEnd;
+      const minIdx = allowedBackspaceMinBySpaces(text);
 
-      // If any part of the deletion would cross the boundary, block it
-      var leftMost = Math.min(selStart, selEnd);
+      const leftMost = Math.min(selStart, selEnd);
       if (leftMost <= minIdx){ e.preventDefault(); return; }
     }
   });
 
-  /* ===== Keydown fallback (YOUR CODE) ===== */
+  /* ===== Fallback: keydown guard ===== */
   els.inputArea.addEventListener('keydown', function(e){
     if (!started) return;
+
+    // Snapshot before key changes
+    const changeKeys = ['Backspace','Delete','Enter',' '];
+    if (e.key && (e.ctrlKey || e.metaKey || e.shiftKey || changeKeys.includes(e.key))) snapshotTextarea();
 
     // Ctrl/Cmd-anything
     if (e.ctrlKey || e.metaKey){
@@ -506,22 +532,48 @@ document.addEventListener('DOMContentLoaded', function(){
       e.preventDefault(); return;
     }
 
-    // Prevent space after typed words reach passage word count (spec)
+    // Prevent space after typed words reach passage word count
     if (e.key === ' '){
-      var refCount = passage.split(/\s+/).length;
-      var typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
+      const refCount = passage.split(/\s+/).length;
+      const typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
       if (typedCount >= refCount){ e.preventDefault(); return; }
     }
 
     // Backspace/Delete boundary
     if (e.key === 'Backspace' || e.key === 'Delete'){
-      var text  = els.inputArea.value;
-      var start = els.inputArea.selectionStart;
-      var end   = els.inputArea.selectionEnd;
-      var minIdx = allowedBackspaceMinBySpaces(text);
-      var leftMost = Math.min(start, end);
+      const text  = els.inputArea.value;
+      const start = els.inputArea.selectionStart;
+      const end   = els.inputArea.selectionEnd;
+      const minIdx = allowedBackspaceMinBySpaces(text);
+      const leftMost = Math.min(start, end);
       if (leftMost <= minIdx){ e.preventDefault(); return; }
     }
+  });
+
+  /* ===== Ultimate fallback: input revert ===== */
+  els.inputArea.addEventListener('input', function(){
+    if (!started) return;
+
+    const newVal = els.inputArea.value;
+    // If length decreased or same-length diff, it could be a deletion
+    const deletionOccurred = (newVal.length < lastVal.length) || (newVal.length === lastVal.length && newVal !== lastVal);
+    if (!deletionOccurred){ highlightProgress(); snapshotTextarea(); return; }
+
+    const minIdx = allowedBackspaceMinBySpaces(lastVal); // boundary based on pre-change
+    const diffAt = firstDiffIndex(lastVal, newVal);
+    if (diffAt === -1){ highlightProgress(); snapshotTextarea(); return; }
+
+    // If earliest change crosses boundary, revert to last safe state
+    if (diffAt <= minIdx){
+      els.inputArea.value = lastVal;
+      const safePos = Math.max(minIdx + 1, lastSelStart);
+      els.inputArea.setSelectionRange(safePos, safePos);
+      showToast('Backspace limited to last two words');
+      return;
+    }
+
+    highlightProgress();
+    snapshotTextarea();
   });
 
   // Block paste via context menu as well
@@ -529,8 +581,6 @@ document.addEventListener('DOMContentLoaded', function(){
     showToast('⚠️ CTRL/CMD or Paste not allowed');
     e.preventDefault();
   });
-
-  els.inputArea.addEventListener('input', function(){ if (!started) return; highlightProgress(); });
 
   window.addEventListener('beforeunload', function(e){ if (!started) return; e.preventDefault(); e.returnValue=''; });
 
