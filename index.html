@@ -35,24 +35,24 @@
   #timerEl{background:#fff; color:#0b1220; font-weight:800; padding:10px 14px; border-radius:12px; box-shadow:var(--soft); min-width:84px; text-align:center}
 
   .section{background:var(--card); border-radius:var(--radius); box-shadow:var(--ring); padding:18px; margin-top:18px}
-  .section h3{margin:0 0 10px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.14em}
+  .section h3{margin:0 0 10px; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.14em}
   .scroll{max-height:210px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#fff}
   .inputbox{min-height:160px; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; padding:16px; background:#f8fafc}
 
-  /* Visuals during typing */
-  /* No "ok" style (we don't add the class anymore) */
-  #textDisplay span.err{color:var(--err-red);}      /* red text only */
-  #textDisplay span.cur{background:var(--cur-yellow); color:#111827; padding:2px 3px; border-radius:4px}
+  /* Typing visuals */
+  #textDisplay span.ok{ color:#6b7280; }          /* correct = grey text */
+  #textDisplay span.err{ color:var(--err-red); }  /* wrong = red text */
+  #textDisplay span.cur{ background:var(--cur-yellow); color:#111827; padding:2px 3px; border-radius:4px }
 
   .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px}
   .stat{border:1px solid #e5e7eb; border-radius:14px; padding:14px 16px; background:#fff}
-  .stat small{display:block; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.12em}
+  .stat small{display:block; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.12em}
   .value{font-size:20px; font-weight:800; margin-top:6px}
-  .value .u{font-size:11px; color:var(--muted); font-weight:700; margin-left:4px}
+  .value .u{font-size:11px; color:#6b7280; font-weight:700; margin-left:4px}
   .final{margin-top:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
   .pill-fail{background:#fee2e2; color:#991b1b; border:1px solid #fecaca; font-weight:900; letter-spacing:.08em; padding:10px 18px; border-radius:12px}
   .pill-pass{background:#dcfce7; color:#065f46; border:1px solid #bbf7d0; font-weight:900; letter-spacing:.08em; padding:10px 18px; border-radius:12px}
-  .note{color:var(--muted)}
+  .note{color:#6b7280}
   .hidden{display:none}
 
   /* Toast */
@@ -66,7 +66,7 @@
   #toastWrap.show{ display:block; }
   #toastWrap.show #toast{ opacity:1; }
 
-  /* Modal (Instruction popup) */
+  /* Modal */
   .modal-backdrop{
     position:fixed; inset:0; background:rgba(15,23,42,.55);
     display:none; align-items:center; justify-content:center; z-index:50;
@@ -132,7 +132,7 @@
           autocorrect="off" autocomplete="off" autocapitalize="off" spellcheck="false"
           style="width:100%; height:140px; border:none; outline:none; background:transparent; font-size:14px; line-height:1.6;"></textarea>
       </div>
-      <small class="note">Backspace is limited to edits within the last two spaces of your typed text.</small>
+      <small class="note">Backspace/Delete/Cut are limited to edits within the last two spaces of your typed text.</small>
     </section>
 
     <!-- Results -->
@@ -162,7 +162,7 @@
     </section>
   </div>
 
-  <!-- Instruction Modal -->
+  <!-- Instruction Modal (shown once, before English stage) -->
   <div id="instrBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="instrTitle">
     <div class="modal">
       <h2 id="instrTitle">Instructions</h2>
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function(){
     inputArea:  document.getElementById('inputArea'),
     startBtn:   document.getElementById('startBtn'),
     submitBtn:  document.getElementById('submitBtn'),
-    resetBtn:  document.getElementById('resetBtn'),
+    resetBtn:   document.getElementById('resetBtn'),
     timerEl:    document.getElementById('timerEl'),
     bothResults:document.getElementById('bothResults'),
     preResultsNote: document.getElementById('preResultsNote'),
@@ -216,16 +216,16 @@ document.addEventListener('DOMContentLoaded', function(){
     <ol>
       <li>The candidates will be provided with the master text passage of about 1500 key depressions in English.</li>
       <li>The typing can be either word based typing or key strokes based typing.</li>
-      <li>For example, 35 w.p.m. is about 10500 key depressions per hour and 30 w.p.m. corresponds to about 9000 key depression per hour.</li>
-      <li>The duration of the English typing test is 05:00 minute.</li>
-      <li>The countdown timer in the top right corner of the screen will display the remaining time. When the timer reaches zero, the examination will end by itself; you are not required to submit.</li>
-      <li>Repeating the passage is not required. If time remains, you may revise and correct mistakes during the prescribed time.</li>
-      <li>After every punctuation mark, only one space is to be inserted (comma, full stop, question mark, etc.). Follow the question paper precisely.</li>
-      <li>The combination of alphanumeric keys followed by one space is termed as one “Word”.</li>
-      <li>Once satisfied, you may submit using the Submit button. After submission, editing is not possible.</li>
-      <li>If your computer is locked/switched off or you need help, inform an invigilator immediately.</li>
-      <li>In case of auto-restart, you will be provided the full time again to type the given passage.</li>
-      <li>After typing the given number of words in the master text, the space bar will not allow additional words. You can still type characters without using space.</li>
+      <li>For example, 35 w.p.m. ≈ 10500 key depressions/hour and 30 w.p.m. ≈ 9000 key depressions/hour.</li>
+      <li>The duration of the English typing test is 05:00 minutes.</li>
+      <li>The countdown timer (top-right) shows remaining time. When it reaches zero, the test ends automatically.</li>
+      <li>Repeating the passage is not required. You may revise and correct mistakes within the time.</li>
+      <li>After punctuation, insert only one space. Follow the question paper precisely.</li>
+      <li>One “Word” = alphanumeric keys followed by a space.</li>
+      <li>After pressing Submit, no further editing is possible.</li>
+      <li>If the computer locks/restarts or you need help, inform the invigilator immediately.</li>
+      <li>On auto-restart, you will be provided the full time again.</li>
+      <li>After typing the given number of words in the master text, the spacebar won’t add more words (non-space characters still allowed).</li>
     </ol>`;
 
   /* ===== State ===== */
@@ -236,12 +236,10 @@ document.addEventListener('DOMContentLoaded', function(){
   let passage = '';
   let startedAt = null;
   let results = { EN:null, HI:null };
-
-  // Show instructions only once
   let instructionsShownOnce = false;
 
   // Passages (loaded from passages.json)
-  let passageSets = [];   // [{id,label,english,hindi}]
+  let passageSets = [];
   let englishPassage = "";
   let hindiPassage   = "";
 
@@ -302,11 +300,32 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   /* ===== Backspace/Delete/Cut limited to last TWO spaces ===== */
-  function allowedBackspaceMinBySpaces(val){
+  function backspaceBoundary(val){
     const spaces = [];
     for (let i=0;i<val.length;i++){ if (val[i]===' ') spaces.push(i); }
-    if (spaces.length <= 2) return 0;
-    return spaces[spaces.length - 3] + 1; // lock everything before the 3rd-from-last space
+    if (spaces.length <= 2) return 0;                 // <=2 spaces typed ⇒ free to edit anywhere
+    return spaces[spaces.length - 3] + 1;             // lock before this index
+  }
+  function preventIfOutsideDeletionWindow(e){
+    const ta = e.target;
+    const val = ta.value;
+    const start = ta.selectionStart;
+    const end   = ta.selectionEnd;
+    const minIdx = backspaceBoundary(val);
+
+    // selection deletion touching boundary
+    const leftMost = Math.min(start, end);
+    if (leftMost <= minIdx){ e.preventDefault(); return true; }
+
+    // single-caret deletion
+    const t = e.inputType || '';
+    const backward = /delete(Content|Word|SoftLine|HardLine)Backward|deleteByCut/.test(t);
+    const forward  = /delete(Content|Word|SoftLine|HardLine)Forward/.test(t) || (t.startsWith('delete') && !backward);
+
+    if (backward && (start-1) <= minIdx){ e.preventDefault(); return true; }
+    if (forward  &&  start    <= minIdx){ e.preventDefault(); return true; }
+
+    return false;
   }
 
   /* ===== Flow ===== */
@@ -358,7 +377,6 @@ document.addEventListener('DOMContentLoaded', function(){
   function startStage(){
     if (started) return;
     setButtonsRunning(true);
-    // Show popup only once (English stage). For Hindi, start directly.
     if (!instructionsShownOnce && stage === 'EN'){ openInstructionsAndStart(); }
     else { actuallyStartStage(); }
   }
@@ -380,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function(){
     started=false;
   }
 
-  /* ===== Scoring & Highlights (no "ok" class now) ===== */
+  /* ===== Scoring & Highlights ===== */
   function computeResults(){
     const elapsedSec = Math.max(1, Math.round((Date.now()-startedAt)/1000));
     const minutes = elapsedSec/60;
@@ -390,13 +408,14 @@ document.addEventListener('DOMContentLoaded', function(){
     const spans = els.textDisplay.querySelectorAll('span');
 
     let full=0, partial=0;
-    for (let n=0;n<spans.length;n++){ spans[n].classList.remove('err','cur'); }
+    for (let n=0;n<spans.length;n++){ spans[n].classList.remove('ok','err','cur'); }
 
     for (let i=0;i<refWords.length;i++){
       const span = spans[i];
       const tw = typedWords[i];
       if (tw==null){ continue; }
-      if (tw !== refWords[i]) { span.classList.add('err'); partial++; }
+      if (tw === refWords[i]) span.classList.add('ok');   // grey text
+      else { span.classList.add('err'); partial++; }      // red text
     }
     if (typedWords.length < refWords.length){ full = refWords.length - typedWords.length; }
     if (typedWords.length > refWords.length){ partial += (typedWords.length - refWords.length); }
@@ -452,15 +471,15 @@ document.addEventListener('DOMContentLoaded', function(){
     const typedWords = wordsOf(els.inputArea.value);
     const spans = els.textDisplay.querySelectorAll('span');
     for (let i=0;i<spans.length;i++){
-      const span = spans[i]; span.classList.remove('err','cur');
+      const span = spans[i]; span.classList.remove('ok','err','cur');
       const tw = typedWords[i]; if (tw==null) continue;
-      if (tw !== refWords[i]) span.classList.add('err');
+      if (tw === refWords[i]) span.classList.add('ok'); else span.classList.add('err');
     }
     const curIndex = Math.max(0, typedWords.length - 1);
     const curSpan = spans[curIndex]; if (curSpan){ curSpan.classList.add('cur'); curSpan.scrollIntoView({block:'nearest', inline:'nearest'}); }
   }
 
-  /* ===== Global key guards ===== */
+  /* ===== Global guards ===== */
   window.addEventListener('keydown', function(e){
     if (!started) return;
     if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'r'))){
@@ -469,26 +488,21 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  // beforeinput guard — handles all delete types
+  // PRIMARY: beforeinput blocks all delete variants
   els.inputArea.addEventListener('beforeinput', function(e){
     if (!started) return;
-    const type = e.inputType;
 
-    if (type === 'insertFromPaste' || type === 'insertFromDrop'){
+    if (e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop'){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
-    if (type.startsWith('delete')){
-      const text = e.target.value;
-      const selStart = e.target.selectionStart;
-      const selEnd   = e.target.selectionEnd;
-      const minIdx = allowedBackspaceMinBySpaces(text);
-      const leftMost = Math.min(selStart, selEnd);
-      if (leftMost <= minIdx){ e.preventDefault(); return; }
+
+    if (e.inputType && e.inputType.startsWith('delete')){
+      if (preventIfOutsideDeletionWindow(e)) return;
     }
   });
 
-  // keydown fallback
+  // FALLBACK: keydown
   els.inputArea.addEventListener('keydown', function(e){
     if (!started) return;
 
@@ -500,24 +514,29 @@ document.addEventListener('DOMContentLoaded', function(){
       showToast('⚠️ CTRL/CMD or Paste not allowed');
       e.preventDefault(); return;
     }
+
     // Prevent space beyond reference word count
     if (e.key === ' '){
       const refCount = passage.split(/\s+/).length;
       const typedCount = (els.inputArea.value.trim().length ? els.inputArea.value.trim().split(/\s+/).length : 0);
       if (typedCount >= refCount){ e.preventDefault(); return; }
     }
-    // Backspace/Delete boundary across selection
+
+    // Backspace/Delete fallback across selection
     if (e.key === 'Backspace' || e.key === 'Delete'){
-      const text  = els.inputArea.value;
-      const start = els.inputArea.selectionStart;
-      const end   = els.inputArea.selectionEnd;
-      const minIdx = allowedBackspaceMinBySpaces(text);
-      const leftMost = Math.min(start, end);
-      if (leftMost <= minIdx){ e.preventDefault(); return; }
+      const fake = { target: els.inputArea, preventDefault: ()=>e.preventDefault(),
+                     inputType: (e.key==='Backspace' ? 'deleteContentBackward' : 'deleteContentForward') };
+      if (preventIfOutsideDeletionWindow(fake)) return;
     }
   });
 
-  // Mouse/context paste fallback
+  // Context-menu "Cut" fallback
+  els.inputArea.addEventListener('cut', function(e){
+    if (!started) return;
+    const fake = { target: els.inputArea, preventDefault: ()=>e.preventDefault(), inputType: 'deleteByCut' };
+    if (preventIfOutsideDeletionWindow(fake)) return;
+  });
+
   els.inputArea.addEventListener('paste', function(e){
     showToast('⚠️ CTRL/CMD or Paste not allowed');
     e.preventDefault();
@@ -525,7 +544,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
   els.inputArea.addEventListener('input', function(){ if (!started) return; highlightProgress(); });
 
-  // Prevent unload/refresh during test
   window.addEventListener('beforeunload', function(e){ if (!started) return; e.preventDefault(); e.returnValue=''; });
 
   // Buttons
@@ -566,7 +584,6 @@ document.addEventListener('DOMContentLoaded', function(){
       els.startBtn.textContent = 'Start English';
     }catch(e){
       console.error('[passages.json] load error:', e);
-      // Fallback single set
       passageSets = [{
         id:'default', label:'Default',
         english:"The Uttar Pradesh Subordinate Services Selection Commission conducts the typing test to check a candidate's ability to type accurately at a practical pace. During the examination you will copy the given passage within a strict five minute window. The objective is not only to reach a higher speed, but also to maintain precision while switching between words, punctuation and casing. Students are advised to focus on rhythm, keep their posture neutral and avoid looking at the keyboard. With consistent practice the gross speed and net speed both improve substantially.",
